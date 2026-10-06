@@ -1,0 +1,30 @@
+{
+  "id": "dnd5e-spell-advancement",
+  "title": "D&D5e Spell Advancement",
+  "description": "Native D&D5e spell-selection advancements for class progression.",
+  "version": "0.1.1",
+  "authors": [
+    {
+      "name": "Local"
+    }
+  ],
+  "compatibility": {
+    "minimum": "14.367",
+    "verified": "14.368"
+  },
+  "relationships": {
+    "systems": [
+      {
+        "id": "dnd5e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "6.0.5",
+          "verified": "6.0.5"
+        }
+      }
+    ]
+  },
+  "esmodules": [
+    "scripts/main.mjs"
+  ]
+}
