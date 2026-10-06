@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Imported characters retain existing class spell choices and the native Compendium Browser excludes spells already on the Actor.
+
 ## 0.4.0 - 2026-10-06
 
 - First public release of native D&D5e spell-selection Advancements.

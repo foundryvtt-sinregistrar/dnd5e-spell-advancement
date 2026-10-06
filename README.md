@@ -85,4 +85,11 @@ Identificadores disponibles: `druid`, `sorcerer`, `warlock`, `ranger`,
 
 Las subclases se detectan por su UUID de origen oficial al añadirse al Actor.
 
+## Actores importados
+
+Al configurar un Actor importado, el módulo registra los conjuros de su clase
+ya existentes como elecciones históricas. El Compendium Browser nativo excluye
+los conjuros que el Actor ya posee, para que no puedan volver a elegirse al
+resolver los avances pendientes.
+
 `actor` debe ser el Actor seleccionado o una referencia al Actor en una macro.
