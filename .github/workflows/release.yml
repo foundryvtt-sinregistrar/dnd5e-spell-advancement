@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Validate, package, and draft release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Validate manifest and module entry point
+        run: npm run validate
+      - name: Verify tag matches manifest version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          VERSION="$(node -p 'require("./module.json").version')"
+          test "$RELEASE_TAG" = "v$VERSION"
+      - name: Build release assets from tagged commit
+        run: python -B dev-tools/buildScripts/build_release.py --dist dist --ref "$GITHUB_SHA" --allow-dirty
+      - name: Verify packaged release
+        run: |
+          python -B -m unittest tests.test_build_release -v
+          (cd dist && sha256sum --check SHA256SUMS.txt)
+      - name: Create draft GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            dist/*.zip
+            dist/SHA256SUMS.txt
+            module.json
