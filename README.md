@@ -20,6 +20,15 @@ Al crear un Clérigo, el módulo inicia un segundo `AdvancementManager` nativo
 para registrar las elecciones. En subidas posteriores, D&D5e incorpora esos
 avances en el mismo flujo normal de subida de nivel.
 
+Bardo (PHB 2024):
+
+- trucos de la lista de Bardo: 2 a nivel 1, +1 a niveles 4 y 10;
+- conjuros preparados de Bardo hasta nivel 9, restringidos al nivel de espacio
+  disponible;
+- desde nivel 10, `Secretos mágicos` permite cada nuevo conjuro preparado de
+  las listas de Bardo, Clérigo, Druida y Mago, tal como indica el rasgo oficial;
+- los conjuros usan Carisma y se crean preparados.
+
 ## Actores existentes
 
 El módulo no modifica automáticamente actores ya existentes. Para iniciar la
@@ -27,6 +36,12 @@ configuración de un Clérigo existente, ejecuta como propietario del Actor:
 
 ```js
 await game.modules.get("dnd5e-spell-advancement").api.configureActorCleric(actor);
+```
+
+Para un Bardo existente:
+
+```js
+await game.modules.get("dnd5e-spell-advancement").api.configureActorBard(actor);
 ```
 
 `actor` debe ser el Actor seleccionado o una referencia al Actor en una macro.

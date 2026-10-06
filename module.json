@@ -2,7 +2,7 @@
   "id": "dnd5e-spell-advancement",
   "title": "D&D5e Spell Advancement",
   "description": "Native D&D5e spell-selection advancements for class progression.",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "authors": [
     {
       "name": "Local"
