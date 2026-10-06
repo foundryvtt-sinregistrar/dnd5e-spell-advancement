@@ -367,6 +367,126 @@ function sourceId(item) {
   return item?.getFlag?.("dnd5e", "sourceId") ?? item?._stats?.compendiumSource ?? null;
 }
 
+/** @param {Actor} actor @returns {Set<string>} */
+function existingSpellSourceIds(actor) {
+  return new Set(actor?.itemTypes?.spell
+    ?.map(sourceId)
+    .filter(uuid => typeof uuid === "string" && uuid.startsWith("Compendium.")) ?? []);
+}
+
+/**
+ * Registra como elecciones históricas los conjuros de clase ya importados.
+ * No reclama conjuros innatos, de dotes, ni de otra clase: D&D5e expone la
+ * procedencia de un conjuro de clase mediante `sourceItem`.
+ *
+ * @param {Item} classItem
+ * @param {object[]} advancements
+ * @returns {object[]}
+ */
+function seedImportedSpellChoices(classItem, advancements) {
+  const identifier = classItem.type === "subclass"
+    ? classItem.system.classIdentifier
+    : classItem.system.identifier;
+  if (!identifier) return advancements;
+
+  const available = classItem.actor?.itemTypes?.spell
+    ?.filter(spell => (
+      (spell.system.sourceItem === `class:${identifier}` || spell.system.classIdentifier === identifier)
+      && sourceId(spell)
+    ))
+    .sort((left, right) => left.system.level - right.system.level || left.name.localeCompare(right.name)) ?? [];
+  const currentLevel = classItem.system.levels ?? 0;
+
+  for (const advancement of advancements) {
+    if ((advancement.type !== "ItemChoice") || (advancement.configuration?.type !== "spell")) continue;
+    const spellLevel = advancement.configuration.restriction.level;
+    const isEligible = spell => spellLevel === "0" ? spell.system.level === 0 : spell.system.level > 0;
+    for (const [level, choice] of Object.entries(advancement.configuration.choices)
+      .sort(([left], [right]) => Number(left) - Number(right))) {
+      if (Number(level) > currentLevel) continue;
+      const selected = available.filter(isEligible).slice(0, choice.count);
+      if (!selected.length) continue;
+      advancement.value.added[level] = Object.fromEntries(selected.map(spell => [spell.id, sourceId(spell)]));
+      for (const spell of selected) available.splice(available.indexOf(spell), 1);
+    }
+  }
+  return advancements;
+}
+
+/**
+ * D&D5e 6.0.5 no expone una exclusión de UUIDs en ItemChoice. El Browser sí
+ * admite filtros arbitrarios y usa el mismo patrón para excluir clases ya
+ * presentes. Se conserva el Browser nativo; sólo se añade `NOT uuid IN` para
+ * los conjuros embebidos que el Actor ya posee.
+ */
+function installExistingSpellExclusion() {
+  const ItemChoice = CONFIG.DND5E.advancementTypes.ItemChoice?.documentClass;
+  const Flow = ItemChoice?.metadata?.apps?.flow;
+  const Browser = dnd5e.applications.CompendiumBrowser;
+  const originalBrowse = Flow?.DEFAULT_OPTIONS?.actions?.browse;
+  if (!Flow || !Browser || !originalBrowse || originalBrowse.dsaExcludesExistingSpells) return;
+
+  const browse = async function(event, target) {
+    const config = this.advancement.configuration;
+    const { current, max } = this.counts;
+    if (current >= max) {
+      ui.notifications.warn("DND5E.ADVANCEMENT.ItemChoice.Warning.MaxSelected", { localize: true });
+      return;
+    }
+    const filters = { locked: { additional: {}, documentClass: "Item", exclusive: true } };
+    if (config.type) {
+      filters.locked.types = new Set([config.type]);
+      if ((config.type === "feat") && config.restriction.type) {
+        const typeConfig = CONFIG.DND5E.featureTypes[config.restriction.type];
+        const subtype = typeConfig.subtypes?.[config.restriction.subtype];
+        filters.locked.additional.category = { [config.restriction.type]: 1 };
+        if (subtype) filters.locked.additional.subtype = { [config.restriction.subtype]: 1 };
+      }
+    } else filters.locked.types = this.advancement.constructor.VALID_TYPES;
+
+    if (config.type === "feat") {
+      filters.locked.arbitrary = [{ k: "system.prerequisites.level", o: "lte", v: this.featureLevel }];
+    } else if ((config.type === "spell") && (config.restriction.level !== "")) {
+      if (config.restriction.level === "available") filters.locked.additional.level = { max: this._maxSpellSlotLevel() };
+      else if (config.restriction.level === "availableNoCantrips") {
+        filters.locked.additional.level = { min: 1, max: this._maxSpellSlotLevel() };
+      } else filters.locked.additional.level = { min: Number(config.restriction.level), max: Number(config.restriction.level) };
+    }
+    if ((config.type === "spell") && config.restriction.list.size) {
+      filters.locked.additional.spelllist = config.restriction.list.reduce((result, list) => {
+        result[list] = 1;
+        return result;
+      }, {});
+    }
+    if ((config.type === "spell") && config.restriction.school.size) {
+      filters.locked.additional.school = config.restriction.school.reduce((result, school) => {
+        result[school] = 1;
+        return result;
+      }, {});
+    }
+
+    const existing = existingSpellSourceIds(this.advancement.actor);
+    if ((config.type === "spell") && existing.size) {
+      filters.locked.arbitrary ??= [];
+      filters.locked.arbitrary.push({ o: "NOT", v: { k: "uuid", o: "in", v: existing } });
+    }
+    const result = await Browser.select({
+      filters,
+      prerequisites: {
+        validate: item => item.system.validatePrerequisites?.({
+          actor: this.advancement.actor, level: this.featureLevel
+        })
+      },
+      selection: { min: 1, max: max - current }
+    }, this.manager?._detachOptions());
+    if (!result?.size) return;
+    await this.advancement.apply(this.level, { selected: Array.from(result).filter(uuid => !this.selected.has(uuid)) });
+    this.render();
+  };
+  browse.dsaExcludesExistingSpells = true;
+  Flow.DEFAULT_OPTIONS.actions.browse = browse;
+}
+
 /**
  * @param {Item} item
  * @returns {object[]|null}
@@ -461,7 +581,7 @@ async function configureClass(classItem) {
     return { status: "unsupported-actor" };
   }
 
-  const missing = advancementsData
+  const missing = seedImportedSpellChoices(classItem, advancementsData)
     .filter(data => !classItem.system.advancement.get(data._id));
   if (!missing.length) return { status: "already-configured" };
 
@@ -548,6 +668,7 @@ async function configureActorSubclass(actor, origin) {
 }
 
 Hooks.once("ready", () => {
+  installExistingSpellExclusion();
   game.modules.get(MODULE_ID).api = {
     configureCleric,
     configureActorCleric,
