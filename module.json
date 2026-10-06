@@ -1,11 +1,11 @@
 {
   "id": "dnd5e-spell-advancement",
   "title": "D&D5e Spell Advancement",
-  "description": "Native D&D5e spell-selection advancements for class progression.",
+  "description": "Native D&D5e spell-selection Advancements for supported class and subclass progression.",
   "version": "0.4.0",
   "authors": [
     {
-      "name": "Local"
+      "name": "foundryvtt-sinregistrar"
     }
   ],
   "compatibility": {
@@ -24,6 +24,13 @@
       }
     ]
   },
+  "url": "https://github.com/foundryvtt-sinregistrar/dnd5e-spell-advancement",
+  "manifest": "https://raw.githubusercontent.com/foundryvtt-sinregistrar/dnd5e-spell-advancement/main/module.json",
+  "download": "https://github.com/foundryvtt-sinregistrar/dnd5e-spell-advancement/releases/latest/download/dnd5e-spell-advancement.zip",
+  "bugs": "https://github.com/foundryvtt-sinregistrar/dnd5e-spell-advancement/issues",
+  "readme": "https://github.com/foundryvtt-sinregistrar/dnd5e-spell-advancement/blob/main/README.md",
+  "changelog": "https://github.com/foundryvtt-sinregistrar/dnd5e-spell-advancement/blob/main/CHANGELOG.md",
+  "license": "https://github.com/foundryvtt-sinregistrar/dnd5e-spell-advancement/blob/main/LICENSE",
   "esmodules": [
     "scripts/main.mjs"
   ]

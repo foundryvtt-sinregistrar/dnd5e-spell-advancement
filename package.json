@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "validate": "node dev-tools/buildScripts/validate-release.mjs",
+    "build:release": "python -B dev-tools/buildScripts/build_release.py",
+    "test:release": "python -B -m unittest tests.test_build_release -v"
+  }
+}
