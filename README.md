@@ -20,6 +20,9 @@ Clérigo (PHB 2024):
   22 conjuros preparados a nivel 20;
 - el nivel máximo de conjuro se limita de forma nativa a los espacios de
   conjuro disponibles del actor;
+- el Navegador de Compendios permite acotar el intervalo de nivel mostrado;
+  por ejemplo, cuando estén disponibles los niveles 1 y 2, se puede mostrar
+  1–2, sólo 1–1 o sólo 2–2, sin poder ampliar el intervalo permitido;
 - los trucos se crean siempre preparados y los conjuros como preparados, con
   Sabiduría como característica de lanzamiento.
 

@@ -375,6 +375,54 @@ function existingSpellSourceIds(actor) {
 }
 
 /**
+ * Los filtros bloqueados sustituyen siempre los valores que el usuario elige
+ * en el navegador. Este wrapper conserva un intervalo duro en una opción del
+ * navegador, pero deja que el usuario reduzca el intervalo visible.
+ */
+function installSpellLevelRangeControls() {
+  const Browser = dnd5e.applications.CompendiumBrowser;
+  if (!Browser || Browser.prototype._onChangeForm?.dsaSpellLevelRangeControls) return;
+
+  const originalChange = Browser.prototype._onChangeForm;
+  Browser.prototype._onChangeForm = function(formConfig, event) {
+    const range = this.options.dsaSpellLevelRange;
+    const input = event.target;
+    if (range && /^additional\.level\.(min|max)$/.test(input?.name)) {
+      if (input.value !== "") {
+        const value = Number(input.value);
+        if (Number.isFinite(value)) input.value = Math.min(range.max, Math.max(range.min, value));
+      }
+    }
+    return originalChange.call(this, formConfig, event);
+  };
+  Browser.prototype._onChangeForm.dsaSpellLevelRangeControls = true;
+
+  const originalAttachPartListeners = Browser.prototype._attachPartListeners;
+  Browser.prototype._attachPartListeners = function(partId, htmlElement, options) {
+    originalAttachPartListeners.call(this, partId, htmlElement, options);
+    const range = this.options.dsaSpellLevelRange;
+    if (!range || (partId !== "filters")) return;
+    for (const input of htmlElement.querySelectorAll('input[name^="additional.level."]')) {
+      input.min = range.min;
+      input.max = range.max;
+    }
+  };
+}
+
+/**
+ * @param {string} restriction Nivel configurado por el advancement.
+ * @param {number} maxAvailable Nivel máximo de espacio del actor.
+ * @returns {{min: number, max: number}|null}
+ */
+function spellLevelRange(restriction, maxAvailable) {
+  if (restriction === "") return null;
+  if (restriction === "available") return { min: 0, max: maxAvailable };
+  if (restriction === "availableNoCantrips") return { min: 1, max: maxAvailable };
+  const level = Number(restriction);
+  return { min: level, max: level };
+}
+
+/**
  * Registra como elecciones históricas los conjuros de clase ya importados.
  * No reclama conjuros innatos, de dotes, ni de otra clase: D&D5e expone la
  * procedencia de un conjuro de clase mediante `sourceItem`.
@@ -425,6 +473,7 @@ function installExistingSpellExclusion() {
   const Browser = dnd5e.applications.CompendiumBrowser;
   const originalBrowse = Flow?.DEFAULT_OPTIONS?.actions?.browse;
   if (!Flow || !Browser || !originalBrowse || originalBrowse.dsaExcludesExistingSpells) return;
+  installSpellLevelRangeControls();
 
   const browse = async function(event, target) {
     const config = this.advancement.configuration;
@@ -434,6 +483,7 @@ function installExistingSpellExclusion() {
       return;
     }
     const filters = { locked: { additional: {}, documentClass: "Item", exclusive: true } };
+    let allowedSpellLevelRange = null;
     if (config.type) {
       filters.locked.types = new Set([config.type]);
       if ((config.type === "feat") && config.restriction.type) {
@@ -446,11 +496,18 @@ function installExistingSpellExclusion() {
 
     if (config.type === "feat") {
       filters.locked.arbitrary = [{ k: "system.prerequisites.level", o: "lte", v: this.featureLevel }];
-    } else if ((config.type === "spell") && (config.restriction.level !== "")) {
-      if (config.restriction.level === "available") filters.locked.additional.level = { max: this._maxSpellSlotLevel() };
-      else if (config.restriction.level === "availableNoCantrips") {
-        filters.locked.additional.level = { min: 1, max: this._maxSpellSlotLevel() };
-      } else filters.locked.additional.level = { min: Number(config.restriction.level), max: Number(config.restriction.level) };
+    } else if (config.type === "spell") {
+      const levelRange = spellLevelRange(config.restriction.level, this._maxSpellSlotLevel());
+      if (levelRange) {
+        // `initial` es editable; `arbitrary` siempre se aplica al buscar y
+        // no se puede ampliar desde la interfaz del navegador.
+        filters.initial = { additional: { level: { ...levelRange } } };
+        filters.locked.arbitrary = [
+          { k: "system.level", o: "gte", v: levelRange.min },
+          { k: "system.level", o: "lte", v: levelRange.max }
+        ];
+        allowedSpellLevelRange = levelRange;
+      }
     }
     if ((config.type === "spell") && config.restriction.list.size) {
       filters.locked.additional.spelllist = config.restriction.list.reduce((result, list) => {
@@ -472,6 +529,7 @@ function installExistingSpellExclusion() {
     }
     const result = await Browser.select({
       filters,
+      dsaSpellLevelRange: allowedSpellLevelRange,
       prerequisites: {
         validate: item => item.system.validatePrerequisites?.({
           actor: this.advancement.actor, level: this.featureLevel
