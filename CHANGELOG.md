@@ -1,8 +1,9 @@
 # Changelog
 
-## Unreleased
+## 1.14.0 - 2026-10-13
 
 - Imported characters retain existing class spell choices and the native Compendium Browser excludes spells already on the Actor.
+- The Compendium Browser keeps the Advancement's spell-level range enforced while allowing users to narrow the visible range.
 
 ## 0.4.0 - 2026-10-06
 
