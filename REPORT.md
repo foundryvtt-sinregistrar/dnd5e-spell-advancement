@@ -15,7 +15,26 @@ subidas de nivel se resuelven con el `AdvancementManager` nativo de D&D5e.
 Para un Actor ya existente, el API del módulo abre ese mismo gestor de forma
 explícita.
 
+## Procesamiento de Actores existentes
+
+`configureExistingActors()` recorre únicamente los Actores de mundo que el
+usuario actual puede modificar y que exponen `supportsAdvancement`. Detecta
+clases y subclases compatibles por sus identificadores estables y omite los
+ítems que ya contienen todos los Advancements del módulo.
+
+Cada entrada se resuelve con `AdvancementManager.forNewAdvancement`; no se
+crean conjuros directamente. Al completar el gestor, el hook confirmado de
+D&D5e `dnd5e.advancementManagerComplete` abre el siguiente. Si el usuario
+cierra un gestor, la cola se pausa para poder reintentar la misma entrada o
+cancelarla explícitamente. Los conjuros importados se conservan como elecciones
+históricas y siguen excluidos del Compendium Browser.
+
 ## Contenido implementado
+
+La cola también se expone en Ajustes de partida mediante el API nativo
+`game.settings.registerMenu`. La ventana registrada es restringida al GM y
+controla el mismo API público del módulo; no reemplaza el selector ni modifica
+datos de Actor directamente.
 
 | Origen | Trucos | Conjuros de nivel 1+ | Aptitud |
 | --- | --- | --- | --- |
@@ -53,6 +72,9 @@ mayor espacio de conjuro disponible para la clase o subclase.
 
 - `node --check scripts/main.mjs` sin errores.
 - `module.json` se parsea correctamente como JSON.
+- La cola de Actores existentes se verificó contra `AdvancementManager` de
+  D&D5e 6.0.5: `forNewAdvancement` y el hook
+  `dnd5e.advancementManagerComplete` son los puntos de integración usados.
 - Se comprobó que todos los IDs propios de Advancement tienen 16 caracteres
   alfanuméricos, requisito que provocó el primer error de Clérigo.
 - `git diff --check` sin errores de espacios.

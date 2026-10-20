@@ -1,0 +1,51 @@
+<section class="dnd5e-spell-advancement-existing-actors">
+  <p class="hint">
+    Revisa los Actores de mundo compatibles y abre el selector nativo de D&amp;D5e
+    uno a uno. Los conjuros ya importados se conservan; no se añaden conjuros
+    automáticamente.
+  </p>
+
+  {{#if batch}}
+  <fieldset>
+    <legend>Cola actual</legend>
+    <p><strong>Estado:</strong> {{batch.status}}</p>
+    {{#if batch.current}}
+    <p><strong>En curso:</strong> {{batch.current.actor}} — {{batch.current.item}}</p>
+    {{/if}}
+    <p>
+      Completados: {{batch.completed.length}} ·
+      Omitidos: {{batch.skipped.length}} ·
+      Errores: {{batch.errors.length}} ·
+      Pendientes: {{batch.pending.length}}
+    </p>
+  </fieldset>
+  {{/if}}
+
+  <fieldset>
+    <legend>Avances pendientes</legend>
+    {{#if pending.length}}
+    <ol>
+      {{#each pending}}
+      <li><strong>{{actor}}</strong> — {{item}} ({{count}} avances)</li>
+      {{/each}}
+    </ol>
+    {{else}}
+    <p class="hint">No hay Actores compatibles pendientes para el usuario actual.</p>
+    {{/if}}
+  </fieldset>
+
+  <footer class="form-footer">
+    <button type="button" data-action="scan">
+      <i class="fas fa-magnifying-glass"></i> Analizar
+    </button>
+    <button type="button" data-action="start" {{#if batch}}disabled{{/if}}>
+      <i class="fas fa-play"></i> Iniciar cola
+    </button>
+    <button type="button" data-action="resume" {{#unless batch}}disabled{{/unless}}>
+      <i class="fas fa-forward"></i> Reanudar
+    </button>
+    <button type="button" data-action="cancel" {{#unless batch}}disabled{{/unless}}>
+      <i class="fas fa-ban"></i> Cancelar cola
+    </button>
+  </footer>
+</section>

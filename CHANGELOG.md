@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Evita el fallo de D&D5e 6.0.5 al restaurar un `ItemGrant` importado sin
+  elementos registrados mientras se añade un Advancement de conjuros.
+- Adds a native sequential batch for configuring supported existing Actors without automatically adding spells.
+- Adds a restricted World Settings menu for reviewing and controlling that batch without a macro.
+
 ## 1.14.0 - 2026-10-13
 
 - Imported characters retain existing class spell choices and the native Compendium Browser excludes spells already on the Actor.

@@ -462,6 +462,33 @@ function seedImportedSpellChoices(classItem, advancements) {
 }
 
 /**
+ * D&D5e 6.0.5 revierte todos los Advancements ya aplicados al añadir uno nuevo
+ * con `AdvancementManager.forNewAdvancement`. Un ItemGrant importado sin
+ * `value.added` no tiene nada que revertir: su `reverse` devuelve undefined,
+ * pero el gestor intenta restaurarlo inmediatamente y D&D5e accede a
+ * `undefined.items`.
+ *
+ * Eliminar exclusivamente esos pares automáticos reverse/restore conserva el
+ * ItemGrant vacío tal como estaba y deja que el gestor nativo procese el nuevo
+ * ItemChoice de conjuros.
+ *
+ * @param {object} manager Gestor nativo de Advancement de D&D5e.
+ * @returns {number} Número de pasos automáticos omitidos.
+ */
+function removeEmptyItemGrantRestoreSteps(manager) {
+  let removed = 0;
+  manager.steps = manager.steps.filter(step => {
+    const advancement = step.flow?.advancement;
+    const isEmptyItemGrant = advancement?.type === "ItemGrant"
+      && !Object.keys(advancement.value?.added ?? {}).length;
+    const isUnsafeRestore = isEmptyItemGrant && ["reverse", "restore"].includes(step.type);
+    if (isUnsafeRestore) removed += 1;
+    return !isUnsafeRestore;
+  });
+  return removed;
+}
+
+/**
  * D&D5e 6.0.5 no expone una exclusión de UUIDs en ItemChoice. El Browser sí
  * admite filtros arbitrarios y usa el mismo patrón para excluir clases ya
  * presentes. Se conserva el Browser nativo; sólo se añade `NOT uuid IN` para
@@ -651,6 +678,11 @@ async function configureClass(classItem) {
 
   const advancements = missing.map(data => new ItemChoice(data, { parent: classItem }));
   const manager = AdvancementManager.forNewAdvancement(classItem.actor, classItem.id, advancements);
+  const skippedItemGrantSteps = removeEmptyItemGrantRestoreSteps(manager);
+  if (skippedItemGrantSteps) {
+    console.warn(`${MODULE_ID} | ${classItem.actor.name}: se omitieron ${skippedItemGrantSteps} pasos `
+      + `de restauraci\u00f3n de ItemGrant sin datos para ${classItem.name}.`);
+  }
   if (!manager.steps.length) return { status: "no-steps", manager };
 
   await manager.render(true);
@@ -725,6 +757,219 @@ async function configureActorSubclass(actor, origin) {
   return configureClass(subclass);
 }
 
+/**
+ * Devuelve los ítems de clase y subclase que aún no tienen todos los avances
+ * de conjuros de este módulo. Sólo se inspeccionan Actores de mundo sobre los
+ * que el usuario actual puede escribir.
+ *
+ * @param {Iterable<Actor>} [actors=game.actors]
+ * @returns {{actor: Actor, item: Item, missing: string[]}[]}
+ */
+function findExistingActorSpellAdvancements(actors=game.actors) {
+  const entries = [];
+  for (const actor of actors) {
+    if (!actor?.isOwner || !actor.system.metadata?.supportsAdvancement) continue;
+    const classItems = [...(actor.itemTypes?.class ?? []), ...(actor.itemTypes?.subclass ?? [])];
+    for (const item of classItems) {
+      const advancements = advancementsForClass(item);
+      if (!advancements) continue;
+      const missing = advancements
+        .filter(advancement => !item.system.advancement.get(advancement._id))
+        .map(advancement => advancement._id);
+      if (missing.length) entries.push({ actor, item, missing });
+    }
+  }
+  return entries;
+}
+
+/** @type {{queue: object[], cursor: number, current: object|null, completed: object[], skipped: object[], errors: object[]}|null} */
+let existingActorBatch = null;
+
+/** @param {object} batch */
+function existingActorBatchStatus(batch) {
+  return {
+    status: batch.current ? "awaiting-choice" : (batch.cursor < batch.queue.length ? "running" : "complete"),
+    total: batch.queue.length,
+    current: batch.current ? { actor: batch.current.actor.name, item: batch.current.item.name } : null,
+    completed: batch.completed.map(entry => ({ actor: entry.actor.name, item: entry.item.name })),
+    skipped: batch.skipped.map(entry => ({ actor: entry.actor.name, item: entry.item.name, status: entry.status })),
+    errors: batch.errors.map(entry => ({ actor: entry.actor.name, item: entry.item.name, error: entry.error.message })),
+    pending: batch.queue.slice(batch.cursor + (batch.current ? 1 : 0))
+      .map(entry => ({ actor: entry.actor.name, item: entry.item.name }))
+  };
+}
+
+/**
+ * Abre el siguiente gestor nativo de la cola. No avanza mientras haya una
+ * elección visible: el usuario conserva siempre la selección de conjuros.
+ *
+ * @param {object} batch
+ * @returns {Promise<object>}
+ */
+async function advanceExistingActorBatch(batch) {
+  if (existingActorBatch !== batch) return existingActorBatchStatus(batch);
+  if (batch.current?.manager?.rendered) return existingActorBatchStatus(batch);
+  batch.current = null;
+
+  while (batch.cursor < batch.queue.length) {
+    const entry = batch.queue[batch.cursor];
+    try {
+      const result = await configureClass(entry.item);
+      if (result.status === "rendered") {
+        batch.current = { ...entry, manager: result.manager };
+        ui.notifications.info(`${MODULE_ID} | ${entry.actor.name}: selecciona los conjuros de ${entry.item.name}.`);
+        return existingActorBatchStatus(batch);
+      }
+      batch.skipped.push({ ...entry, status: result.status });
+    } catch (error) {
+      console.error(`${MODULE_ID} | No se pudo configurar ${entry.actor.name}: ${entry.item.name}`, error);
+      batch.errors.push({ ...entry, error });
+    }
+    batch.cursor += 1;
+  }
+
+  existingActorBatch = null;
+  ui.notifications.info(`${MODULE_ID} | Procesamiento masivo terminado: ${batch.completed.length} configurados, ${batch.skipped.length} omitidos, ${batch.errors.length} errores.`);
+  return existingActorBatchStatus(batch);
+}
+
+/**
+ * Inicia una cola de Actores existentes. No añade conjuros automáticamente;
+ * cada entrada abre el AdvancementManager nativo para que el usuario elija.
+ *
+ * @param {Iterable<Actor>} [actors=game.actors]
+ * @returns {Promise<object>}
+ */
+async function configureExistingActors(actors=game.actors) {
+  if (existingActorBatch) return existingActorBatchStatus(existingActorBatch);
+  existingActorBatch = {
+    queue: findExistingActorSpellAdvancements(actors),
+    cursor: 0,
+    current: null,
+    completed: [],
+    skipped: [],
+    errors: []
+  };
+  if (!existingActorBatch.queue.length) {
+    const result = existingActorBatchStatus(existingActorBatch);
+    existingActorBatch = null;
+    ui.notifications.info(`${MODULE_ID} | No hay Actores existentes pendientes de configurar.`);
+    return result;
+  }
+  return advanceExistingActorBatch(existingActorBatch);
+}
+
+/**
+ * Reintenta la entrada actual tras cerrar o cancelar su selector nativo.
+ * @returns {Promise<object>}
+ */
+async function resumeExistingActorBatch() {
+  if (!existingActorBatch) throw new Error("No hay ningún procesamiento masivo pendiente.");
+  return advanceExistingActorBatch(existingActorBatch);
+}
+
+/** @returns {object|null} */
+function cancelExistingActorBatch() {
+  if (!existingActorBatch) return null;
+  const result = existingActorBatchStatus(existingActorBatch);
+  existingActorBatch = null;
+  ui.notifications.info(`${MODULE_ID} | Procesamiento masivo cancelado.`);
+  return result;
+}
+
+/** Actualiza las ventanas abiertas del menú de procesamiento masivo. */
+function refreshExistingActorBatchConfig() {
+  foundry.applications.instances.forEach(app => {
+    if (app instanceof ExistingActorBatchConfig) app.render();
+  });
+}
+
+const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
+
+/**
+ * Menú de Ajustes de partida para revisar y ejecutar la cola de Actores
+ * existentes. La interfaz sólo controla la cola; las elecciones se resuelven
+ * siempre en el AdvancementManager nativo de D&D5e.
+ */
+class ExistingActorBatchConfig extends HandlebarsApplicationMixin(ApplicationV2) {
+  static DEFAULT_OPTIONS = {
+    id: `${MODULE_ID}-existing-actors`,
+    classes: ["dnd5e-spell-advancement"],
+    window: {
+      title: "Procesar Actores existentes",
+      icon: "fas fa-wand-magic-sparkles"
+    },
+    position: {
+      width: 560,
+      height: "auto"
+    },
+    actions: {
+      scan: ExistingActorBatchConfig.#onScan,
+      start: ExistingActorBatchConfig.#onStart,
+      resume: ExistingActorBatchConfig.#onResume,
+      cancel: ExistingActorBatchConfig.#onCancel
+    }
+  };
+
+  static PARTS = {
+    content: {
+      template: `modules/${MODULE_ID}/templates/existing-actors-config.hbs`
+    }
+  };
+
+  /** @override */
+  async _prepareContext(options) {
+    const pending = findExistingActorSpellAdvancements();
+    return {
+      ...await super._prepareContext(options),
+      pending: pending.map(entry => ({
+        actor: entry.actor.name,
+        item: entry.item.name,
+        count: entry.missing.length
+      })),
+      batch: existingActorBatch ? existingActorBatchStatus(existingActorBatch) : null
+    };
+  }
+
+  /** @this {ExistingActorBatchConfig} */
+  static async #onScan() {
+    return this.render({ force: true });
+  }
+
+  /** @this {ExistingActorBatchConfig} */
+  static async #onStart() {
+    await configureExistingActors();
+    return this.render({ force: true });
+  }
+
+  /** @this {ExistingActorBatchConfig} */
+  static async #onResume() {
+    try {
+      await resumeExistingActorBatch();
+    } catch (error) {
+      ui.notifications.warn(error.message);
+    }
+    return this.render({ force: true });
+  }
+
+  /** @this {ExistingActorBatchConfig} */
+  static async #onCancel() {
+    cancelExistingActorBatch();
+    return this.render({ force: true });
+  }
+}
+
+Hooks.once("init", () => {
+  game.settings.registerMenu(MODULE_ID, "existingActorBatch", {
+    name: "Procesar Actores existentes",
+    hint: "Detecta y procesa en cola los avances de conjuros pendientes en Actores importados.",
+    label: "Abrir procesamiento",
+    icon: "fas fa-wand-magic-sparkles",
+    type: ExistingActorBatchConfig,
+    restricted: true
+  });
+});
+
 Hooks.once("ready", () => {
   installExistingSpellExclusion();
   game.modules.get(MODULE_ID).api = {
@@ -733,8 +978,29 @@ Hooks.once("ready", () => {
     configureBard,
     configureActorBard,
     configureActorClass,
-    configureActorSubclass
+    configureActorSubclass,
+    findExistingActorSpellAdvancements,
+    configureExistingActors,
+    resumeExistingActorBatch,
+    cancelExistingActorBatch
   };
+});
+
+Hooks.on("dnd5e.advancementManagerComplete", manager => {
+  const batch = existingActorBatch;
+  if (!batch?.current || (batch.current.manager !== manager)) return;
+  batch.completed.push(batch.current);
+  batch.cursor += 1;
+  batch.current = null;
+  refreshExistingActorBatchConfig();
+  setTimeout(() => {
+    advanceExistingActorBatch(batch).catch(error => {
+      console.error(`${MODULE_ID} | No se pudo continuar el procesamiento masivo`, error);
+      ui.notifications.error("No se pudo continuar el procesamiento masivo. Consulta la consola.");
+    }).finally(() => {
+      refreshExistingActorBatchConfig();
+    });
+  }, 0);
 });
 
 Hooks.on("createItem", (item, _options, userId) => {

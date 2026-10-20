@@ -95,4 +95,30 @@ ya existentes como elecciones históricas. El Compendium Browser nativo excluye
 los conjuros que el Actor ya posee, para que no puedan volver a elegirse al
 resolver los avances pendientes.
 
-`actor` debe ser el Actor seleccionado o una referencia al Actor en una macro.
+Para procesar todos los Actores de mundo que poseas sin buscarlos uno a uno,
+abre **Ajustes de partida → Procesar Actores existentes → Abrir
+procesamiento** como GM. La ventana muestra los avances pendientes y permite
+iniciar, reanudar o cancelar la cola. También puedes ejecutar esta macro como
+GM o propietario de los Actores:
+
+```js
+await game.modules.get("dnd5e-spell-advancement").api.configureExistingActors();
+```
+
+La macro abre un `AdvancementManager` nativo cada vez. Completa las elecciones
+de un Actor para pasar automáticamente al siguiente. No añade conjuros ni
+modifica los que ya existen sin una elección confirmada en D&D5e. Si cierras un
+selector, la cola queda pausada y puedes reintentar esa misma entrada con:
+
+```js
+await game.modules.get("dnd5e-spell-advancement").api.resumeExistingActorBatch();
+```
+
+Para abandonar la cola, sin deshacer los Actores ya completados:
+
+```js
+game.modules.get("dnd5e-spell-advancement").api.cancelExistingActorBatch();
+```
+
+`actor` debe ser el Actor seleccionado o una referencia al Actor en las macros
+individuales anteriores.
