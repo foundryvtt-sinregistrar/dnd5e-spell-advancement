@@ -4,6 +4,10 @@
 
 - Evita el fallo de D&D5e 6.0.5 al restaurar un `ItemGrant` importado sin
   elementos registrados mientras se añade un Advancement de conjuros.
+- Excluye conjuros ya presentes también por `system.identifier`, evitando
+  equivalentes de otros compendios con UUID diferente.
+- Impide seleccionar los equivalentes que un índice de compendio antiguo no
+  pueda ocultar por identificador.
 - Adds a native sequential batch for configuring supported existing Actors without automatically adding spells.
 - Adds a restricted World Settings menu for reviewing and controlling that batch without a macro.
 

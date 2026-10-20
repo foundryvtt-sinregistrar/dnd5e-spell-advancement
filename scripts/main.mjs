@@ -375,6 +375,42 @@ function existingSpellSourceIds(actor) {
 }
 
 /**
+ * UUIDs de compendio distintos pueden representar el mismo conjuro entre
+ * compendios o ediciones. D&D5e conserva `system.identifier` como la
+ * identidad semántica estable del conjuro y el Compendium Browser lo indexa.
+ *
+ * @param {Actor} actor
+ * @returns {Set<string>}
+ */
+function existingSpellIdentifiers(actor) {
+  return new Set(actor?.itemTypes?.spell
+    ?.map(spell => spell.system.identifier)
+    .filter(identifier => typeof identifier === "string" && identifier.length) ?? []);
+}
+
+/**
+ * Conserva los prerrequisitos nativos y añade una invalidación compatible con
+ * el Compendium Browser para equivalentes que un índice de compendio antiguo
+ * no pueda excluir por `system.identifier`.
+ *
+ * @param {Item} item
+ * @param {Actor} actor
+ * @param {number} level
+ * @param {Set<string>} identifiers
+ * @returns {Map<string, {label: string, valid: boolean}>|undefined}
+ */
+function validateSpellChoice(item, actor, level, identifiers) {
+  const results = item.system.validatePrerequisites?.({ actor, level }) ?? new Map();
+  if ((item.type === "spell") && identifiers.has(item.system.identifier)) {
+    results.set(`${MODULE_ID}.existing-spell`, {
+      label: "El Actor ya tiene este conjuro.",
+      valid: false
+    });
+  }
+  return results.size ? results : undefined;
+}
+
+/**
  * Los filtros bloqueados sustituyen siempre los valores que el usuario elige
  * en el navegador. Este wrapper conserva un intervalo duro en una opción del
  * navegador, pero deja que el usuario reduzca el intervalo visible.
@@ -554,13 +590,21 @@ function installExistingSpellExclusion() {
       filters.locked.arbitrary ??= [];
       filters.locked.arbitrary.push({ o: "NOT", v: { k: "uuid", o: "in", v: existing } });
     }
+    const existingIdentifiers = existingSpellIdentifiers(this.advancement.actor);
+    if ((config.type === "spell") && existingIdentifiers.size) {
+      filters.locked.arbitrary ??= [];
+      filters.locked.arbitrary.push({
+        o: "NOT",
+        v: { k: "system.identifier", o: "in", v: existingIdentifiers }
+      });
+    }
     const result = await Browser.select({
       filters,
       dsaSpellLevelRange: allowedSpellLevelRange,
       prerequisites: {
-        validate: item => item.system.validatePrerequisites?.({
-          actor: this.advancement.actor, level: this.featureLevel
-        })
+        validate: item => validateSpellChoice(
+          item, this.advancement.actor, this.featureLevel, existingIdentifiers
+        )
       },
       selection: { min: 1, max: max - current }
     }, this.manager?._detachOptions());
