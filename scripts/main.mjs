@@ -375,6 +375,20 @@ function existingSpellSourceIds(actor) {
 }
 
 /**
+ * El último segmento de un UUID de Item es el ID estable del documento en el
+ * compendio. D&D5e lo reutiliza entre sus paquetes de contenido 2024, aunque
+ * cambie el paquete que contiene el conjuro.
+ *
+ * @param {Actor} actor
+ * @returns {Set<string>}
+ */
+function existingSpellSourceDocumentIds(actor) {
+  return new Set(existingSpellSourceIds(actor)
+    .map(uuid => uuid.match(/\.Item\.([^.]+)$/)?.[1])
+    .filter(Boolean));
+}
+
+/**
  * UUIDs de compendio distintos pueden representar el mismo conjuro entre
  * compendios o ediciones. D&D5e conserva `system.identifier` como la
  * identidad semántica estable del conjuro y el Compendium Browser lo indexa.
@@ -397,11 +411,14 @@ function existingSpellIdentifiers(actor) {
  * @param {Actor} actor
  * @param {number} level
  * @param {Set<string>} identifiers
+ * @param {Set<string>} sourceDocumentIds
  * @returns {Map<string, {label: string, valid: boolean}>|undefined}
  */
-function validateSpellChoice(item, actor, level, identifiers) {
+function validateSpellChoice(item, actor, level, identifiers, sourceDocumentIds) {
   const results = item.system.validatePrerequisites?.({ actor, level }) ?? new Map();
-  if ((item.type === "spell") && identifiers.has(item.system.identifier)) {
+  const isExistingSpell = identifiers.has(item.identifier)
+    || sourceDocumentIds.has(item.id);
+  if ((item.type === "spell") && isExistingSpell) {
     results.set(`${MODULE_ID}.existing-spell`, {
       label: "El Actor ya tiene este conjuro.",
       valid: false
@@ -598,12 +615,14 @@ function installExistingSpellExclusion() {
         v: { k: "system.identifier", o: "in", v: existingIdentifiers }
       });
     }
+    const existingSourceDocumentIds = existingSpellSourceDocumentIds(this.advancement.actor);
     const result = await Browser.select({
       filters,
       dsaSpellLevelRange: allowedSpellLevelRange,
       prerequisites: {
         validate: item => validateSpellChoice(
-          item, this.advancement.actor, this.featureLevel, existingIdentifiers
+          item, this.advancement.actor, this.featureLevel,
+          existingIdentifiers, existingSourceDocumentIds
         )
       },
       selection: { min: 1, max: max - current }

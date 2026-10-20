@@ -8,6 +8,8 @@
   equivalentes de otros compendios con UUID diferente.
 - Impide seleccionar los equivalentes que un índice de compendio antiguo no
   pueda ocultar por identificador.
+- Reconoce también el ID de documento compartido por paquetes de compendio
+  2024, incluso cuando una traducción no expone el identificador canónico.
 - Adds a native sequential batch for configuring supported existing Actors without automatically adding spells.
 - Adds a restricted World Settings menu for reviewing and controlling that batch without a macro.
 
