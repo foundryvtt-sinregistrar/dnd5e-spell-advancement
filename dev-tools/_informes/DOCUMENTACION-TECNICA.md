@@ -204,9 +204,17 @@ Tras el hook `ready`, el módulo publica estas funciones en
 
 `seedImportedSpellChoices` busca conjuros del Actor que pertenezcan a la clase
 en configuración mediante `system.sourceItem` o `system.classIdentifier`.
-Sólo toma conjuros que tengan procedencia de compendio (`sourceId`). Para cada
-elección histórica elegible, registra en `value.added` el ID local del Item y
-su UUID de procedencia.
+Sólo toma conjuros que tengan procedencia de compendio (`sourceId`).
+`importedClassSpellsByLevel` los agrupa por `system.level` y elimina
+equivalentes mediante identificador D&D5e, ID de documento de compendio o UUID
+de origen. Después construye dos bolsas: trucos (nivel 0) y conjuros de nivel
+1+. Cada bolsa cubre primero, en orden de los niveles de clase ya alcanzados,
+las elecciones históricas del Advancement. El excedente se conserva en el
+Actor; si la bolsa no cubre una elección, D&D5e muestra sólo ese déficit en el
+selector nativo.
+
+Para cada elección histórica elegible, registra en `value.added` el ID local
+del Item y su UUID de procedencia.
 
 Esto tiene dos efectos:
 

@@ -10,6 +10,9 @@
   pueda ocultar por identificador.
 - Reconoce también el ID de documento compartido por paquetes de compendio
   2024, incluso cuando una traducción no expone el identificador canónico.
+- Reconcilia los conjuros importados por clase/subclase en dos bolsas
+  independientes (trucos y nivel 1+), agrupadas por nivel y deduplicadas antes
+  de calcular las elecciones pendientes.
 - Adds a native sequential batch for configuring supported existing Actors without automatically adding spells.
 - Adds a restricted World Settings menu for reviewing and controlling that batch without a macro.
 

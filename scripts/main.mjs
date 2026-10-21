@@ -367,6 +367,14 @@ function sourceId(item) {
   return item?.getFlag?.("dnd5e", "sourceId") ?? item?._stats?.compendiumSource ?? null;
 }
 
+/**
+ * @param {Item} item
+ * @returns {string|null}
+ */
+function sourceDocumentId(item) {
+  return sourceId(item)?.match(/\.Item\.([^.]+)$/)?.[1] ?? null;
+}
+
 /** @param {Actor} actor @returns {Set<string>} */
 function existingSpellSourceIds(actor) {
   return new Set(actor?.itemTypes?.spell
@@ -476,6 +484,56 @@ function spellLevelRange(restriction, maxAvailable) {
 }
 
 /**
+ * Devuelve una identidad semántica para no contar dos veces copias del mismo
+ * conjuro importado desde compendios o paquetes distintos.
+ *
+ * @param {Item} spell
+ * @returns {string}
+ */
+function spellIdentity(spell) {
+  if (spell.system.identifier) return `identifier:${spell.system.identifier}`;
+  if (sourceDocumentId(spell)) return `document:${sourceDocumentId(spell)}`;
+  if (sourceId(spell)) return `source:${sourceId(spell)}`;
+  return `item:${spell.id}`;
+}
+
+/**
+ * Agrupa los conjuros importados de una clase o subclase por su nivel de
+ * conjuro. Sólo conserva Items con procedencia de compendio, necesaria para
+ * registrarlos como elecciones históricas de ItemChoice.
+ *
+ * @param {Item} classItem
+ * @param {string} identifier
+ * @returns {Map<number, Item[]>}
+ */
+function importedClassSpellsByLevel(classItem, identifier) {
+  const byLevel = new Map();
+  const identities = new Set();
+  const spells = classItem.actor?.itemTypes?.spell ?? [];
+
+  for (const spell of spells) {
+    const belongsToClass = spell.system.sourceItem === `class:${identifier}`
+      || spell.system.classIdentifier === identifier;
+    if (!belongsToClass || !sourceId(spell)) continue;
+
+    const identity = spellIdentity(spell);
+    if (identities.has(identity)) continue;
+    identities.add(identity);
+
+    const level = Number(spell.system.level);
+    if (!Number.isInteger(level) || level < 0) continue;
+    const bucket = byLevel.get(level) ?? [];
+    bucket.push(spell);
+    byLevel.set(level, bucket);
+  }
+
+  for (const bucket of byLevel.values()) {
+    bucket.sort((left, right) => left.name.localeCompare(right.name));
+  }
+  return byLevel;
+}
+
+/**
  * Registra como elecciones históricas los conjuros de clase ya importados.
  * No reclama conjuros innatos, de dotes, ni de otra clase: D&D5e expone la
  * procedencia de un conjuro de clase mediante `sourceItem`.
@@ -490,25 +548,26 @@ function seedImportedSpellChoices(classItem, advancements) {
     : classItem.system.identifier;
   if (!identifier) return advancements;
 
-  const available = classItem.actor?.itemTypes?.spell
-    ?.filter(spell => (
-      (spell.system.sourceItem === `class:${identifier}` || spell.system.classIdentifier === identifier)
-      && sourceId(spell)
-    ))
-    .sort((left, right) => left.system.level - right.system.level || left.name.localeCompare(right.name)) ?? [];
+  const byLevel = importedClassSpellsByLevel(classItem, identifier);
+  const available = {
+    cantrips: [...(byLevel.get(0) ?? [])],
+    spells: Array.from(byLevel.entries())
+      .filter(([spellLevel]) => spellLevel > 0)
+      .sort(([left], [right]) => left - right)
+      .flatMap(([, spells]) => spells)
+  };
   const currentLevel = classItem.system.levels ?? 0;
 
   for (const advancement of advancements) {
     if ((advancement.type !== "ItemChoice") || (advancement.configuration?.type !== "spell")) continue;
     const spellLevel = advancement.configuration.restriction.level;
-    const isEligible = spell => spellLevel === "0" ? spell.system.level === 0 : spell.system.level > 0;
+    const bag = spellLevel === "0" ? available.cantrips : available.spells;
     for (const [level, choice] of Object.entries(advancement.configuration.choices)
       .sort(([left], [right]) => Number(left) - Number(right))) {
       if (Number(level) > currentLevel) continue;
-      const selected = available.filter(isEligible).slice(0, choice.count);
+      const selected = bag.splice(0, choice.count);
       if (!selected.length) continue;
       advancement.value.added[level] = Object.fromEntries(selected.map(spell => [spell.id, sourceId(spell)]));
-      for (const spell of selected) available.splice(available.indexOf(spell), 1);
     }
   }
   return advancements;
