@@ -1,7 +1,7 @@
 # Checklist de validación de release
 
 Esta lista se completa antes de crear el tag de cada versión. La compatibilidad
-declarada para la versión 1.14.3 es Foundry VTT 14.367--14.368 y D&D5e 6.0.5.
+declarada es Foundry VTT 14.367--14.368 y D&D5e 6.0.5.
 
 ## Integridad del artefacto
 

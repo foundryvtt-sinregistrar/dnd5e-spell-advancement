@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.14.4 - 2026-10-23
+
+- Adds an English README and public technical documentation links.
+- Aligns the documentation and release workflow for publication in the Foundry
+  VTT package directory.
+
 ## 1.14.3 - 2026-10-22
 
 - Al iniciar la cola, guarda automáticamente los `ItemChoice` completamente

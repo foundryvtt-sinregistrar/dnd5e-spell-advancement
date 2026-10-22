@@ -1,7 +1,7 @@
 # Documentación técnica — D&D5e Spell Advancement
 
-Fecha de revisión: 2026-10-21  
-Versión documentada: 1.14.0 (rama `main`)  
+Fecha de revisión: 2026-10-23
+Versión documentada: 1.14.4 (pendiente de publicación)
 Entorno objetivo: Foundry VTT 14.367–14.368 y sistema D&D5e 6.0.5.
 
 ## 1. Propósito

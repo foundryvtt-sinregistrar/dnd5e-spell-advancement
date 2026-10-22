@@ -1,6 +1,7 @@
 # Informe de implementación
 
-Fecha: 2026-10-06  
+Fecha inicial: 2026-10-06
+Actualización documental: 2026-10-23 (versión 1.14.4 pendiente de publicación)
 Entorno validado: Foundry VTT 14.368 y D&D5e 6.0.5.
 
 ## Resultado
@@ -66,7 +67,8 @@ mayor espacio de conjuro disponible para la clase o subclase.
 - Las subclases se identifican por UUID de origen, nunca por el nombre
   localizado. El UUID de Caballero arcano se confirmó en el compendio
   instalado; el de Tramposo arcano se infirió de la convención del mismo pack
-  y requiere una prueba en un Actor que contenga esa subclase.
+  y sigue requiriendo una prueba en un Actor que contenga esa subclase antes de
+  considerarlo validado para una release nueva.
 
 ## Verificación realizada
 
