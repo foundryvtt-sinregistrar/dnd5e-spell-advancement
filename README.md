@@ -101,14 +101,22 @@ procesamiento** como GM. La ventana muestra los avances pendientes y permite
 iniciar, reanudar o cancelar la cola. También puedes ejecutar esta macro como
 GM o propietario de los Actores:
 
+El ajuste de mundo **Mostrar registro detallado en consola** permite activar o
+desactivar las trazas de diagnóstico del análisis y de la cola. Está activado
+por defecto y sólo lo puede cambiar un GM.
+
 ```js
 await game.modules.get("dnd5e-spell-advancement").api.configureExistingActors();
 ```
 
-La macro abre un `AdvancementManager` nativo cada vez. Completa las elecciones
-de un Actor para pasar automáticamente al siguiente. No añade conjuros ni
-modifica los que ya existen sin una elección confirmada en D&D5e. Si cierras un
-selector, la cola queda pausada y puedes reintentar esa misma entrada con:
+Al iniciar la cola, los avances cuyos cupos ya están cubiertos se guardan
+automáticamente en el perfil de avance del Item de clase, usando como historial
+los conjuros ya importados. No se añaden, eliminan ni modifican conjuros. Así,
+una subida de nivel posterior no vuelve a pedir las elecciones históricas. La
+macro abre un `AdvancementManager` nativo sólo para los déficits restantes.
+Completa las elecciones de un Actor para pasar automáticamente al siguiente. Si
+cierras un selector, la cola queda pausada y puedes reintentar esa misma entrada
+con:
 
 ```js
 await game.modules.get("dnd5e-spell-advancement").api.resumeExistingActorBatch();

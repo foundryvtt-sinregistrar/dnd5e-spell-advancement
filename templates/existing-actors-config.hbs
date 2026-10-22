@@ -1,8 +1,8 @@
 <section class="dnd5e-spell-advancement-existing-actors">
   <p class="hint">
     Revisa los Actores de mundo compatibles y abre el selector nativo de D&amp;D5e
-    uno a uno. Los conjuros ya importados se conservan; no se añaden conjuros
-    automáticamente.
+    uno a uno, sólo cuando falten elecciones. Al iniciar la cola, los avances cuyos cupos ya cubren los conjuros
+    importados se guardan automáticamente como historial; no se añaden conjuros.
   </p>
 
   {{#if batch}}
@@ -14,6 +14,7 @@
     {{/if}}
     <p>
       Completados: {{batch.completed.length}} ·
+      Perfiles reconciliados: {{batch.reconciled.length}} ·
       Omitidos: {{batch.skipped.length}} ·
       Errores: {{batch.errors.length}} ·
       Pendientes: {{batch.pending.length}}
@@ -22,15 +23,28 @@
   {{/if}}
 
   <fieldset>
-    <legend>Avances pendientes</legend>
+    <legend>Selecciones pendientes</legend>
     {{#if pending.length}}
     <ol>
       {{#each pending}}
-      <li><strong>{{actor}}</strong> — {{item}} ({{count}} avances)</li>
+      <li><strong>{{actor}}</strong> — {{item}} ({{deficit}} elecciones; {{count}} avances)</li>
       {{/each}}
     </ol>
     {{else}}
-    <p class="hint">No hay Actores compatibles pendientes para el usuario actual.</p>
+    <p class="hint">No hay selecciones de conjuros pendientes para el usuario actual.</p>
+    {{/if}}
+  </fieldset>
+
+  <fieldset>
+    <legend>Sin selección necesaria (se guardarán al iniciar cola)</legend>
+    {{#if reconciled.length}}
+    <ol>
+      {{#each reconciled}}
+      <li><strong>{{actor}}</strong> — {{item}} ({{count}} avances ya cubiertos por conjuros importados)</li>
+      {{/each}}
+    </ol>
+    {{else}}
+    <p class="hint">No hay avances cubiertos pendientes de instalar.</p>
     {{/if}}
   </fieldset>
 

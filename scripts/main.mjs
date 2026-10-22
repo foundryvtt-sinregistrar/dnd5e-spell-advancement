@@ -1,4 +1,5 @@
 const MODULE_ID = "dnd5e-spell-advancement";
+const DETAILED_CONSOLE_LOG_SETTING = "detailedConsoleLog";
 
 const CLERIC_IDENTIFIER = "cleric";
 const CLERIC_CANTRIPS_ID = "dsaClericCantrip";
@@ -368,6 +369,16 @@ function sourceId(item) {
 }
 
 /**
+ * Registra diagnóstico detallado sólo si el GM lo ha activado en Ajustes de
+ * partida. Los errores y advertencias no usan este filtro.
+ *
+ * @param {...unknown} args
+ */
+function detailedLog(...args) {
+  if (game.settings.get(MODULE_ID, DETAILED_CONSOLE_LOG_SETTING)) console.info(...args);
+}
+
+/**
  * @param {Item} item
  * @returns {string|null}
  */
@@ -571,6 +582,37 @@ function seedImportedSpellChoices(classItem, advancements) {
     }
   }
   return advancements;
+}
+
+/**
+ * Calculates the choices that would remain empty after reconciling imported
+ * spells. It uses the same two bags as the manager: cantrips and level 1+.
+ * This helper does not write anything to the Actor.
+ *
+ * @param {Item} classItem
+ * @param {object[]} advancements
+ * @returns {{id: string, required: number, assigned: number, deficit: number}[]}
+ */
+function importedSpellChoiceDeficits(classItem, advancements) {
+  const currentLevel = classItem.system.levels ?? 0;
+  return seedImportedSpellChoices(classItem, advancements)
+    .filter(advancement => advancement.type === "ItemChoice"
+      && advancement.configuration?.type === "spell")
+    .map(advancement => {
+      let required = 0;
+      let assigned = 0;
+      for (const [level, choice] of Object.entries(advancement.configuration.choices)) {
+        if (Number(level) > currentLevel) continue;
+        required += choice.count;
+        assigned += Object.keys(advancement.value.added[level] ?? {}).length;
+      }
+      return {
+        id: advancement._id,
+        required,
+        assigned,
+        deficit: Math.max(0, required - assigned)
+      };
+    });
 }
 
 /**
@@ -880,15 +922,15 @@ async function configureActorSubclass(actor, origin) {
 }
 
 /**
- * Devuelve los ítems de clase y subclase que aún no tienen todos los avances
- * de conjuros de este módulo. Sólo se inspeccionan Actores de mundo sobre los
- * que el usuario actual puede escribir.
+ * Revisa los avances ausentes sin modificar Actores. Las entradas cubiertas
+ * por conjuros importados se devuelven separadas para que no abran el selector.
  *
  * @param {Iterable<Actor>} [actors=game.actors]
- * @returns {{actor: Actor, item: Item, missing: string[]}[]}
+ * @returns {{pending: object[], reconciled: object[]}}
  */
-function findExistingActorSpellAdvancements(actors=game.actors) {
-  const entries = [];
+function reviewExistingActorSpellAdvancements(actors=game.actors, { log=false }={}) {
+  const pending = [];
+  const reconciled = [];
   for (const actor of actors) {
     if (!actor?.isOwner || !actor.system.metadata?.supportsAdvancement) continue;
     const classItems = [...(actor.itemTypes?.class ?? []), ...(actor.itemTypes?.subclass ?? [])];
@@ -898,13 +940,86 @@ function findExistingActorSpellAdvancements(actors=game.actors) {
       const missing = advancements
         .filter(advancement => !item.system.advancement.get(advancement._id))
         .map(advancement => advancement._id);
-      if (missing.length) entries.push({ actor, item, missing });
+      if (!missing.length) continue;
+
+      const deficits = importedSpellChoiceDeficits(item, advancements);
+      const deficit = deficits.reduce((total, entry) => total + entry.deficit, 0);
+      const hasNonSpellAdvancement = advancements.some(advancement => missing.includes(advancement._id)
+        && ((advancement.type !== "ItemChoice") || (advancement.configuration?.type !== "spell")));
+      const entry = { actor, item, missing, deficits, deficit };
+      const status = (deficit || hasNonSpellAdvancement) ? "pending-choice" : "reconciled";
+      if (status === "pending-choice") pending.push(entry);
+      else reconciled.push(entry);
+      if (log) {
+        detailedLog(`${MODULE_ID} | Revisión: ${actor.name} (${actor.id}) — ${item.name} (${item.id}); `
+          + `estado=${status}; nivel=${item.system.levels ?? 0}; déficit=${deficit}; `
+          + `avances ausentes=${missing.join(", ")}.`, {
+          status,
+          classLevel: item.system.levels ?? 0,
+          missingAdvancements: missing,
+          spellChoices: deficits,
+          totalDeficit: deficit,
+          hasNonSpellAdvancement
+        });
+      }
     }
   }
-  return entries;
+  if (log) {
+    detailedLog(`${MODULE_ID} | Resumen de revisión: ${pending.length} con selección pendiente, ${reconciled.length} sin selección necesaria.`);
+  }
+  return { pending, reconciled };
 }
 
-/** @type {{queue: object[], cursor: number, current: object|null, completed: object[], skipped: object[], errors: object[]}|null} */
+/**
+ * Returns only entries requiring a manual choice. This preserves the original
+ * public API for existing macros while the settings UI also exposes entries
+ * reconciled without a selector.
+ *
+ * @param {Iterable<Actor>} [actors=game.actors]
+ * @returns {object[]}
+ */
+function findExistingActorSpellAdvancements(actors=game.actors) {
+  return reviewExistingActorSpellAdvancements(actors).pending;
+}
+
+/**
+ * Instala los ItemChoice ya cubiertos como historial del Item de clase. No
+ * ejecuta un AdvancementManager porque no hay ninguna elección que solicitar:
+ * los UUID ya guardados en `value.added` apuntan a los conjuros existentes.
+ *
+ * Se usa la API pública de D&D5e `Item#createAdvancement` para que se apliquen
+ * las mismas validaciones y migraciones que desde la hoja del Item.
+ *
+ * @param {{actor: Actor, item: Item}} entry
+ * @returns {Promise<{status: string, count?: number}>}
+ */
+async function reconcileCoveredSpellAdvancements(entry) {
+  const { actor, item: classItem } = entry;
+  const advancementsData = advancementsForClass(classItem);
+  if (!advancementsData || !actor.system.metadata?.supportsAdvancement) {
+    return { status: "unsupported-actor" };
+  }
+
+  const seeded = seedImportedSpellChoices(classItem, advancementsData);
+  const missing = seeded.filter(data => !classItem.system.advancement.get(data._id));
+  const deficits = importedSpellChoiceDeficits(classItem, seeded);
+  const deficit = deficits.reduce((total, choice) => total + choice.deficit, 0);
+  const hasUnsupportedAdvancement = missing.some(data => (data.type !== "ItemChoice")
+    || (data.configuration?.type !== "spell"));
+  if (deficit || hasUnsupportedAdvancement) return { status: "requires-choice" };
+  if (!missing.length) return { status: "already-configured" };
+
+  for (const advancement of missing) {
+    await classItem.createAdvancement(advancement.type, advancement, { renderSheet: false });
+  }
+  detailedLog(`${MODULE_ID} | Perfil reconciliado: ${actor.name} (${actor.id}) — ${classItem.name} (${classItem.id}).`, {
+    installedAdvancements: missing.map(advancement => advancement._id),
+    spellChoices: deficits
+  });
+  return { status: "reconciled", count: missing.length };
+}
+
+/** @type {{queue: object[], cursor: number, current: object|null, completed: object[], reconciled: object[], skipped: object[], errors: object[]}|null} */
 let existingActorBatch = null;
 
 /** @param {object} batch */
@@ -914,6 +1029,7 @@ function existingActorBatchStatus(batch) {
     total: batch.queue.length,
     current: batch.current ? { actor: batch.current.actor.name, item: batch.current.item.name } : null,
     completed: batch.completed.map(entry => ({ actor: entry.actor.name, item: entry.item.name })),
+    reconciled: batch.reconciled.map(entry => ({ actor: entry.actor.name, item: entry.item.name })),
     skipped: batch.skipped.map(entry => ({ actor: entry.actor.name, item: entry.item.name, status: entry.status })),
     errors: batch.errors.map(entry => ({ actor: entry.actor.name, item: entry.item.name, error: entry.error.message })),
     pending: batch.queue.slice(batch.cursor + (batch.current ? 1 : 0))
@@ -936,13 +1052,20 @@ async function advanceExistingActorBatch(batch) {
   while (batch.cursor < batch.queue.length) {
     const entry = batch.queue[batch.cursor];
     try {
+      detailedLog(`${MODULE_ID} | Procesando cola ${batch.cursor + 1}/${batch.queue.length}: ${entry.actor.name} (${entry.actor.id}) — ${entry.item.name} (${entry.item.id}).`, {
+        missingAdvancements: entry.missing,
+        spellChoices: entry.deficits,
+        totalDeficit: entry.deficit
+      });
       const result = await configureClass(entry.item);
       if (result.status === "rendered") {
         batch.current = { ...entry, manager: result.manager };
+        detailedLog(`${MODULE_ID} | Selector nativo abierto para ${entry.actor.name} — ${entry.item.name}.`);
         ui.notifications.info(`${MODULE_ID} | ${entry.actor.name}: selecciona los conjuros de ${entry.item.name}.`);
         return existingActorBatchStatus(batch);
       }
       batch.skipped.push({ ...entry, status: result.status });
+      detailedLog(`${MODULE_ID} | Entrada omitida: ${entry.actor.name} — ${entry.item.name} (${result.status}).`);
     } catch (error) {
       console.error(`${MODULE_ID} | No se pudo configurar ${entry.actor.name}: ${entry.item.name}`, error);
       batch.errors.push({ ...entry, error });
@@ -951,7 +1074,13 @@ async function advanceExistingActorBatch(batch) {
   }
 
   existingActorBatch = null;
-  ui.notifications.info(`${MODULE_ID} | Procesamiento masivo terminado: ${batch.completed.length} configurados, ${batch.skipped.length} omitidos, ${batch.errors.length} errores.`);
+  detailedLog(`${MODULE_ID} | Procesamiento masivo terminado.`, {
+    configured: batch.completed.length,
+    reconciled: batch.reconciled.length,
+    skipped: batch.skipped.length,
+    errors: batch.errors.length
+  });
+  ui.notifications.info(`${MODULE_ID} | Procesamiento masivo terminado: ${batch.completed.length} configurados, ${batch.reconciled.length} perfiles reconciliados, ${batch.skipped.length} omitidos, ${batch.errors.length} errores.`);
   return existingActorBatchStatus(batch);
 }
 
@@ -964,18 +1093,36 @@ async function advanceExistingActorBatch(batch) {
  */
 async function configureExistingActors(actors=game.actors) {
   if (existingActorBatch) return existingActorBatchStatus(existingActorBatch);
+  const review = reviewExistingActorSpellAdvancements(actors, { log: true });
+  const reconciled = [];
+  const errors = [];
+  for (const entry of review.reconciled) {
+    try {
+      const result = await reconcileCoveredSpellAdvancements(entry);
+      if (result.status === "reconciled") reconciled.push({ ...entry, count: result.count });
+      else detailedLog(`${MODULE_ID} | Perfil no reconciliado: ${entry.actor.name} — ${entry.item.name} (${result.status}).`);
+    } catch (error) {
+      console.error(`${MODULE_ID} | No se pudo reconciliar ${entry.actor.name}: ${entry.item.name}`, error);
+      errors.push({ ...entry, error });
+    }
+  }
+
+  // Relee la cola tras guardar los perfiles: si un Actor cambió durante el
+  // proceso, el selector sólo se abrirá para sus déficits actuales.
+  const pending = reviewExistingActorSpellAdvancements(actors, { log: true }).pending;
   existingActorBatch = {
-    queue: findExistingActorSpellAdvancements(actors),
+    queue: pending,
     cursor: 0,
     current: null,
     completed: [],
+    reconciled,
     skipped: [],
-    errors: []
+    errors
   };
   if (!existingActorBatch.queue.length) {
     const result = existingActorBatchStatus(existingActorBatch);
     existingActorBatch = null;
-    ui.notifications.info(`${MODULE_ID} | No hay Actores existentes pendientes de configurar.`);
+    ui.notifications.info(`${MODULE_ID} | No hay selecciones pendientes. Se reconciliaron ${reconciled.length} perfiles.`);
     return result;
   }
   return advanceExistingActorBatch(existingActorBatch);
@@ -1041,10 +1188,16 @@ class ExistingActorBatchConfig extends HandlebarsApplicationMixin(ApplicationV2)
 
   /** @override */
   async _prepareContext(options) {
-    const pending = findExistingActorSpellAdvancements();
+    const review = reviewExistingActorSpellAdvancements();
     return {
       ...await super._prepareContext(options),
-      pending: pending.map(entry => ({
+      pending: review.pending.map(entry => ({
+        actor: entry.actor.name,
+        item: entry.item.name,
+        count: entry.missing.length,
+        deficit: entry.deficit
+      })),
+      reconciled: review.reconciled.map(entry => ({
         actor: entry.actor.name,
         item: entry.item.name,
         count: entry.missing.length
@@ -1055,6 +1208,7 @@ class ExistingActorBatchConfig extends HandlebarsApplicationMixin(ApplicationV2)
 
   /** @this {ExistingActorBatchConfig} */
   static async #onScan() {
+    reviewExistingActorSpellAdvancements(game.actors, { log: true });
     return this.render({ force: true });
   }
 
@@ -1082,6 +1236,16 @@ class ExistingActorBatchConfig extends HandlebarsApplicationMixin(ApplicationV2)
 }
 
 Hooks.once("init", () => {
+  game.settings.register(MODULE_ID, DETAILED_CONSOLE_LOG_SETTING, {
+    name: "Mostrar registro detallado en consola",
+    hint: "Registra el análisis y la cola de Actores con sus cupos, déficit y decisiones.",
+    scope: "world",
+    config: true,
+    restricted: true,
+    type: Boolean,
+    default: true
+  });
+
   game.settings.registerMenu(MODULE_ID, "existingActorBatch", {
     name: "Procesar Actores existentes",
     hint: "Detecta y procesa en cola los avances de conjuros pendientes en Actores importados.",
@@ -1102,6 +1266,7 @@ Hooks.once("ready", () => {
     configureActorClass,
     configureActorSubclass,
     findExistingActorSpellAdvancements,
+    reviewExistingActorSpellAdvancements,
     configureExistingActors,
     resumeExistingActorBatch,
     cancelExistingActorBatch

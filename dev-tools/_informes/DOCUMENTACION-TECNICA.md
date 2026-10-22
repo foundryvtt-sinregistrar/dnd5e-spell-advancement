@@ -181,6 +181,25 @@ confirmación de un `AdvancementManager` que haya creado el ítem.
 
 ## 6. Actores existentes e importados
 
+El análisis separa los avances ausentes en dos resultados: los que conservan
+un déficit de elecciones se incorporan a la cola y abren el
+`AdvancementManager` nativo; los que ya quedan cubiertos por conjuros
+importados se muestran como **Sin selección necesaria**. Al pulsar **Iniciar
+cola**, esta segunda ruta instala automáticamente los `ItemChoice` faltantes
+en el Item de clase con su `value.added` ya reconciliado. Para ello usa la API
+pública `Item#createAdvancement` de D&D5e, por lo que conserva sus validaciones
+y migraciones. No crea, elimina ni modifica conjuros: sólo registra los UUID de
+los existentes como elecciones históricas. El cálculo reutiliza las mismas dos
+bolsas (trucos y nivel 1+) y la misma deduplicación por `system.identifier` /
+documento de compendio que la reconciliación que prepara el gestor.
+
+Si el ajuste de mundo **Mostrar registro detallado en consola** está activado,
+al pulsar **Analizar** o iniciar la cola el módulo registra en consola una
+traza estructurada por Actor/clase con sus IDs, avances ausentes, cupos
+requeridos/asignados, déficit y decisión (`pending-choice` o `reconciled`). La
+traza no se emite durante los repintados ordinarios de la interfaz. El ajuste
+está activado por defecto y es restringido a GM.
+
 El módulo puede actuar sobre una clase concreta o recorrer las clases y
 subclases compatibles que el usuario actual puede modificar.
 

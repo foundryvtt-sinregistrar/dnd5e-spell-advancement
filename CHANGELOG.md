@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Al iniciar la cola, guarda automáticamente los `ItemChoice` completamente
+  cubiertos por conjuros importados como historial de avance. Las subidas de
+  nivel posteriores sólo solicitan elecciones nuevas; nunca crea ni modifica
+  conjuros durante esa reconciliación.
+- Añade el ajuste de mundo **Mostrar registro detallado en consola** para
+  activar o desactivar las trazas de análisis y procesamiento.
+- Registra en consola el análisis y la cola de Actores: cupos cubiertos,
+  déficit, avances ausentes y la decisión de abrir u omitir el selector.
+- Muestra en "Sin selección necesaria" los Actores cuyos conjuros importados
+  cubren todas las elecciones antes de guardar su perfil de avance.
 - Evita el fallo de D&D5e 6.0.5 al restaurar un `ItemGrant` importado sin
   elementos registrados mientras se añade un Advancement de conjuros.
 - Excluye conjuros ya presentes también por `system.identifier`, evitando
