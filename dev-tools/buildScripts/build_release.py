@@ -25,8 +25,9 @@ def ensure_clean_worktree(root: Path) -> None:
         raise RuntimeError("El árbol de trabajo contiene cambios. Haz commit o usa --allow-dirty.")
 
 
-def load_manifest(root: Path) -> tuple[str, str]:
-    data = json.loads((root / "module.json").read_text(encoding="utf-8"))
+def load_manifest(root: Path, ref: str) -> tuple[str, str]:
+    """Read package identity from the exact Git ref that will be archived."""
+    data = json.loads(run(["git", "show", f"{ref}:module.json"], root))
     module_id, version = str(data.get("id", "")).strip(), str(data.get("version", "")).strip()
     if not module_id or not version:
         raise ValueError("module.json debe contener id y version.")
@@ -50,7 +51,7 @@ def main() -> int:
     args = parser.parse_args()
     try:
         root = repository_root(Path.cwd())
-        module_id, version = load_manifest(root)
+        module_id, version = load_manifest(root, args.ref)
         if not args.allow_dirty:
             ensure_clean_worktree(root)
         output = (root / args.dist).resolve()

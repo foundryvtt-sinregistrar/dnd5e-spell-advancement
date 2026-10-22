@@ -21,11 +21,22 @@ class BuildReleaseTests(unittest.TestCase):
             cwd=ROOT,
             check=True,
         )
-        manifest = json.loads((ROOT / "module.json").read_text(encoding="utf-8"))
+        manifest = json.loads(
+            subprocess.run(
+                ["git", "show", "HEAD:module.json"],
+                cwd=ROOT,
+                check=True,
+                text=True,
+                stdout=subprocess.PIPE,
+            ).stdout
+        )
         archive = dist / f"{manifest['id']}-{manifest['version']}.zip"
         with zipfile.ZipFile(archive) as package:
             self.assertIn(f"{manifest['id']}/module.json", package.namelist())
             self.assertIn(f"{manifest['id']}/scripts/main.mjs", package.namelist())
+            packaged_manifest = json.loads(package.read(f"{manifest['id']}/module.json"))
+            self.assertEqual(packaged_manifest["id"], manifest["id"])
+            self.assertEqual(packaged_manifest["version"], manifest["version"])
 
 
 if __name__ == "__main__":

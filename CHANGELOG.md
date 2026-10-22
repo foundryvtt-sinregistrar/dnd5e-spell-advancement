@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.14.3 - 2026-10-22
 
 - Al iniciar la cola, guarda automáticamente los `ItemChoice` completamente
   cubiertos por conjuros importados como historial de avance. Las subidas de
