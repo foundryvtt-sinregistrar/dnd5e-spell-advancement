@@ -1,0 +1,1 @@
+Native spell-selection advancements for D&D5e PHB 2024 classes and selected subclasses. Integrates with Foundry VTT 14 and D&D5e 6.0.5 using the native Compendium Browser.

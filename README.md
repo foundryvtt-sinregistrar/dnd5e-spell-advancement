@@ -25,6 +25,196 @@ compendio oficial.
 Para detalles de implementación, compatibilidad y API, consulta la
 [documentación técnica](docs/DOCUMENTACION-TECNICA.md).
 
+---
+
+## ✨ Mejoras en la creación y subida de nivel de personajes mágicos
+
+**D&D5e Spell Advancement** amplía el sistema de progresión de personajes de Dungeons & Dragons 5e en Foundry VTT, incorporando la **selección de trucos y conjuros directamente al proceso de creación del personaje y subida de nivel**.
+
+En lugar de obligar al jugador a buscar manualmente los nuevos conjuros, importarlos a su ficha y comprobar cuáles puede elegir, el módulo integra estas elecciones en el sistema nativo de avances (*Advancement*) de D&D5e.
+
+### 🎯 ¿Qué cambia para el jugador?
+
+Al crear un personaje de una clase compatible o subir de nivel, el módulo incorpora los avances de selección de conjuros que correspondan a su progresión.
+
+El proceso permite:
+
+- **Seleccionar nuevos conjuros durante la subida de nivel**, utilizando el mismo gestor que Foundry emplea para los demás avances del personaje.
+- **Abrir automáticamente el Navegador de Compendios de D&D5e** cuando corresponde realizar una nueva elección.
+- **Mostrar únicamente conjuros de las listas permitidas** para la clase o subclase.
+- **Respetar los niveles de conjuro disponibles**, impidiendo seleccionar conjuros superiores a los que permite la progresión del personaje.
+- **Elegir trucos y conjuros por separado**, respetando las cantidades establecidas para cada nivel.
+- **Evitar elecciones duplicadas**, detectando conjuros que ya posee el personaje, incluso cuando proceden de compendios diferentes.
+- **Registrar las elecciones en el historial de avances**, manteniendo la integración con las futuras subidas de nivel.
+
+Todo ello se realiza mediante los mecanismos nativos de Foundry VTT y D&D5e, sin sustituir el Navegador de Compendios ni modificar los compendios oficiales.
+
+### 🧙 Ejemplo práctico: subir de nivel
+
+Imagina que un Clérigo alcanza el nivel 2.
+
+**Sin los avances proporcionados por el módulo:**
+
+El jugador puede tener que consultar su progresión, localizar los nuevos conjuros permitidos, buscarlos en los compendios y añadirlos manualmente a su ficha.
+
+**Con D&D5e Spell Advancement:**
+
+1. El jugador inicia la subida de nivel del personaje.
+2. Foundry muestra los avances correspondientes, incluyendo la nueva selección de conjuros.
+3. El Navegador de Compendios presenta los conjuros de la lista de Clérigo que cumplen las restricciones de la elección.
+4. El jugador selecciona el nuevo conjuro.
+5. D&D5e incorpora el conjuro a su personaje y registra la elección en el avance de clase.
+
+El resultado es una progresión más integrada, organizada y sencilla para jugadores y directores de juego.
+
+### 📚 Adaptado a las distintas clases mágicas
+
+El módulo tiene en cuenta las diferencias de progresión entre las clases compatibles:
+
+| Clase | Mejora incorporada |
+|---|---|
+| **Clérigo** | Selección de trucos y conjuros preparados según su progresión. |
+| **Bardo** | Elección de conjuros y compatibilidad con Secretos mágicos desde nivel 10. |
+| **Druida** | Incorporación progresiva de trucos y conjuros preparados. |
+| **Hechicero** | Selección de conjuros conforme a la progresión de su clase. |
+| **Brujo** | Selección de trucos y conjuros de Magia del pacto. |
+| **Explorador** | Selección de conjuros según su progresión de semilanzador. |
+| **Paladín** | Incorporación de conjuros preparados al avanzar de nivel. |
+| **Mago** | Selección de conjuros para el libro de conjuros, manteniendo separada su preparación. |
+| **Caballero arcano** | Selección de trucos y conjuros de Mago según su progresión de subclase. |
+| **Tramposo arcano** | Selección de conjuros y concesión de Mano de mago mediante un avance nativo. |
+
+### 🔄 Compatible con personajes existentes
+
+El módulo también permite incorporar estos avances a personajes creados o importados anteriormente.
+
+Desde **Ajustes de partida → Procesar Actores existentes**, el director de juego puede analizar los personajes compatibles y gestionar sus elecciones pendientes.
+
+El proceso:
+
+- Reconoce los conjuros existentes con procedencia identificable.
+- Registra como históricas las elecciones que ya están cubiertas.
+- Evita volver a ofrecer conjuros equivalentes.
+- Solicita únicamente las elecciones que siguen pendientes.
+- Permite pausar y reanudar el procesamiento de personajes.
+
+**Los conjuros existentes se conservan**: la reconciliación de avances no los elimina ni los sustituye automáticamente.
+
+### ⚙️ Integración nativa y limitaciones
+
+D&D5e Spell Advancement utiliza `ItemChoice` y `AdvancementManager`, por lo que las elecciones forman parte del propio sistema de progresión de D&D5e.
+
+El módulo no implementa un sistema de lanzamiento de conjuros alternativo, no modifica los compendios oficiales y no automatiza los reemplazos diarios de conjuros ni la modificación de elecciones ya confirmadas.
+
+Su objetivo es **hacer que aprender y seleccionar conjuros forme parte natural de la creación del personaje y de cada subida de nivel**.
+
+---
+
+## Demostración visual: selección de conjuros al subir de nivel
+Estas capturas proceden de una partida real de Foundry VTT. Muestran la subida de nivel de un **Clérigo 1 → 2**, de un **Mago 5 → 6** y el procesamiento de un actor importado.
+
+El módulo añade avances de elección de conjuros al flujo nativo de D&D5e: el jugador selecciona desde el Navegador de Compendios, los conjuros elegidos se registran en el avance y los personajes importados pueden reconciliar sus elecciones históricas.
+
+> **Nota:** las capturas también muestran la interfaz del sistema D&D5e y otros paquetes instalados. No todas las ventanas o funcionalidades visibles pertenecen a este módulo.
+
+### Clérigo: nivel 1 → 2
+El personaje obtiene una nueva elección de conjuro preparado dentro del propio proceso de subida de nivel.
+
+<p align="center"><img src="docs/foundry/assets/screenshots/cleric/ClericN1-to-ClericN2-05.webp" alt="Navegador de Compendios filtrado para conjuros de Clérigo" width="900"></p>
+
+<details>
+<summary><strong>Ver las 9 capturas del proceso del Clérigo</strong></summary>
+
+**01. Ficha inicial de Clérigo de nivel 1**
+
+![Ficha inicial de Clérigo de nivel 1](docs/foundry/assets/screenshots/cleric/ClericN1-to-ClericN2-01.webp)
+
+**02. Paso 1: puntos de golpe**
+
+![Paso 1: puntos de golpe](docs/foundry/assets/screenshots/cleric/ClericN1-to-ClericN2-02.webp)
+
+**03. Paso 2: características de clase**
+
+![Paso 2: características de clase](docs/foundry/assets/screenshots/cleric/ClericN1-to-ClericN2-03.webp)
+
+**04. Paso 3: elegir nuevo conjuro preparado**
+
+![Paso 3: elegir nuevo conjuro preparado](docs/foundry/assets/screenshots/cleric/ClericN1-to-ClericN2-04.webp)
+
+**05. Navegador de Compendios con lista de Clérigo y filtros**
+
+![Navegador de Compendios con lista de Clérigo y filtros](docs/foundry/assets/screenshots/cleric/ClericN1-to-ClericN2-05.webp)
+
+**06. Conjuro incorporado a la elección del avance**
+
+![Conjuro incorporado a la elección del avance](docs/foundry/assets/screenshots/cleric/ClericN1-to-ClericN2-06.webp)
+
+**07. Avance: límite de conjuros preparados**
+
+![Avance: límite de conjuros preparados](docs/foundry/assets/screenshots/cleric/ClericN1-to-ClericN2-07.webp)
+
+**08. Avances adicionales de la clase**
+
+![Avances adicionales de la clase](docs/foundry/assets/screenshots/cleric/ClericN1-to-ClericN2-08.webp)
+
+**09. Resultado final: Clérigo de nivel 2**
+
+![Resultado final: Clérigo de nivel 2](docs/foundry/assets/screenshots/cleric/ClericN1-to-ClericN2-09.webp)
+
+</details>
+
+### Mago: nivel 5 → 6
+El avance del Mago muestra la selección de dos conjuros para el libro, el filtrado del navegador y el registro de elecciones. También se incluye el procesamiento de un personaje importado.
+
+<p align="center"><img src="docs/foundry/assets/screenshots/wizard/WizardN5-to-WizardN6-03.webp" alt="Selector de conjuros del Mago con filtros de nivel" width="900"></p>
+
+<details>
+<summary><strong>Ver las 10 capturas del Mago y los actores importados</strong></summary>
+
+**01. Mago de nivel 5 antes del avance**
+
+![Mago de nivel 5 antes del avance](docs/foundry/assets/screenshots/wizard/WizardN5-to-WizardN6-01.webp)
+
+**02. Elección de conjuros para el libro de conjuros**
+
+![Elección de conjuros para el libro de conjuros](docs/foundry/assets/screenshots/wizard/WizardN5-to-WizardN6-02.webp)
+
+**03. Navegador de Compendios para el Mago**
+
+![Navegador de Compendios para el Mago](docs/foundry/assets/screenshots/wizard/WizardN5-to-WizardN6-03.webp)
+
+**04. Navegador con filtro de nivel y conjuros disponibles**
+
+![Navegador con filtro de nivel y conjuros disponibles](docs/foundry/assets/screenshots/wizard/WizardN5-to-WizardN6-04.webp)
+
+**05. Dos conjuros añadidos a la elección**
+
+![Dos conjuros añadidos a la elección](docs/foundry/assets/screenshots/wizard/WizardN5-to-WizardN6-05.webp)
+
+**06. Avance: límite de conjuros preparados**
+
+![Avance: límite de conjuros preparados](docs/foundry/assets/screenshots/wizard/WizardN5-to-WizardN6-06.webp)
+
+**07. Paso de rasgos de subclase**
+
+![Paso de rasgos de subclase](docs/foundry/assets/screenshots/wizard/WizardN5-to-WizardN6-07.webp)
+
+**08. Resultado final: Mago de nivel 6**
+
+![Resultado final: Mago de nivel 6](docs/foundry/assets/screenshots/wizard/WizardN5-to-WizardN6-08.webp)
+
+**09. Procesamiento de actores existentes: análisis**
+
+![Procesamiento de actores existentes: análisis](docs/foundry/assets/screenshots/wizard/WizardN5-to-WizardN6-09.webp)
+
+**10. Actores importados: historial reconciliado**
+
+![Actores importados: historial reconciliado](docs/foundry/assets/screenshots/wizard/WizardN5-to-WizardN6-10.webp)
+
+</details>
+
+**Características visibles en las demostraciones:** integración con el gestor de avances de D&D5e, navegador de compendios con filtros, registro de las elecciones y reconciliación de conjuros importados.
+
 ## Alcance actual
 
 Clérigo (PHB 2024):
