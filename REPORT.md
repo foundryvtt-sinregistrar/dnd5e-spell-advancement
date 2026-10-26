@@ -1,8 +1,8 @@
 # Informe de implementación
 
 Fecha inicial: 2026-10-06
-Actualización documental: 2026-10-23 (versión 1.14.4 pendiente de publicación)
-Entorno validado: Foundry VTT 14.368 y D&D5e 6.0.5.
+Actualización documental: 2026-10-26 (versión 1.14.5 pendiente de publicación)
+Entorno validado: Foundry VTT 14.368 y D&D5e 6.0.6.
 
 ## Resultado
 
@@ -75,7 +75,7 @@ mayor espacio de conjuro disponible para la clase o subclase.
 - `node --check scripts/main.mjs` sin errores.
 - `module.json` se parsea correctamente como JSON.
 - La cola de Actores existentes se verificó contra `AdvancementManager` de
-  D&D5e 6.0.5: `forNewAdvancement` y el hook
+  D&D5e 6.0.6: `forNewAdvancement` y el hook
   `dnd5e.advancementManagerComplete` son los puntos de integración usados.
 - Se comprobó que todos los IDs propios de Advancement tienen 16 caracteres
   alfanuméricos, requisito que provocó el primer error de Clérigo.

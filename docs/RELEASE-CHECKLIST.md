@@ -1,7 +1,7 @@
 # Checklist de validación de release
 
 Esta lista se completa antes de crear el tag de cada versión. La compatibilidad
-declarada es Foundry VTT 14.367--14.368 y D&D5e 6.0.5.
+declarada es Foundry VTT 14.367--14.368 y D&D5e 6.0.6.
 
 ## Integridad del artefacto
 
@@ -13,7 +13,7 @@ declarada es Foundry VTT 14.367--14.368 y D&D5e 6.0.5.
 
 ## Prueba funcional en Foundry
 
-- [ ] En un mundo nuevo, habilitar el módulo con D&D5e 6.0.5 no produce errores
+- [ ] En un mundo nuevo, habilitar el módulo con D&D5e 6.0.6 no produce errores
   de consola al iniciar.
 - [ ] Crear un Actor con cada clase base admitida abre el `AdvancementManager`
   nativo y el Compendium Browser de D&D5e, sin un selector propio del módulo.

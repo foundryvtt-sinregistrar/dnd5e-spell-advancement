@@ -1,8 +1,8 @@
 # Documentación técnica — D&D5e Spell Advancement
 
 Fecha de revisión: 2026-10-23
-Versión documentada: 1.14.4 (pendiente de publicación)
-Entorno objetivo: Foundry VTT 14.367–14.368 y sistema D&D5e 6.0.5.
+Versión documentada: 1.14.5 (pendiente de publicación)
+Entorno objetivo: Foundry VTT 14.367–14.368 y sistema D&D5e 6.0.6.
 
 ## 1. Propósito
 
@@ -41,7 +41,7 @@ archivo como módulo ES.
 | Componente | Requisito | Uso en el módulo |
 | --- | --- | --- |
 | Foundry VTT | 14.367 mínimo; 14.368 verificado | Hooks, `ApplicationV2`, ajustes de mundo, Items y Actores. |
-| D&D5e | 6.0.5 | `ItemChoice`, `ItemGrant`, `AdvancementManager` y `CompendiumBrowser`. |
+| D&D5e | 6.0.6 | `ItemChoice`, `ItemGrant`, `AdvancementManager` y `CompendiumBrowser`. |
 | Babele u otros módulos | No requerido | Puede traducir nombres de documentos; por eso el módulo no usa nombres como identidad. |
 
 Las integraciones con D&D5e se limitan a sus mecanismos existentes:
@@ -316,7 +316,7 @@ La lógica se usa al construir el navegador desde la acción `browse`:
 
 ## 9. Defensa ante ItemGrant importados vacíos
 
-D&D5e 6.0.5 puede construir pasos de reversión/restauración al añadir un
+D&D5e 6.0.6 puede construir pasos de reversión/restauración al añadir un
 Advancement nuevo. Un `ItemGrant` importado cuyo `value.added` esté vacío no
 tiene datos para restaurar; el sistema intenta acceder a `undefined.items`.
 
@@ -335,7 +335,7 @@ elementos concedidos. Esta intervención mínima se ejecuta tras crear el
 - Las dotes, especies y rasgos no incluidos explícitamente no reciben
   Advancements del módulo.
 - Artífice no está en los perfiles base actuales.
-- La compatibilidad está validada contra D&D5e 6.0.5; una actualización mayor
+- La compatibilidad está validada contra D&D5e 6.0.6; una actualización mayor
   del sistema requiere revisar las APIs indicadas en la sección 2.
 
 ## 11. Desarrollo, validación y empaquetado

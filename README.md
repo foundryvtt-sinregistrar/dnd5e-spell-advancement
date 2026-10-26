@@ -8,14 +8,14 @@
 
 ![Foundry v14](https://img.shields.io/badge/Foundry-v14-green)
 ![Foundry verified 14.368](https://img.shields.io/badge/Verified-14.368-blue)
-![System dnd5e 6.0.5](https://img.shields.io/badge/dnd5e-6.0.5-blue)
+![System dnd5e 6.0.6](https://img.shields.io/badge/dnd5e-6.0.6-blue)
 
 [![Latest Release](https://img.shields.io/github/v/release/foundryvtt-sinregistrar/dnd5e-spell-advancement?label=release)](https://github.com/foundryvtt-sinregistrar/dnd5e-spell-advancement/releases/latest)
 [![Downloads Latest Release](https://img.shields.io/github/downloads/foundryvtt-sinregistrar/dnd5e-spell-advancement/latest/total?label=descargas%20%C3%BAltima%20release)](https://github.com/foundryvtt-sinregistrar/dnd5e-spell-advancement/releases/latest)
 
 [![Downloads Total](https://img.shields.io/github/downloads/foundryvtt-sinregistrar/dnd5e-spell-advancement/total?label=descargas%20totales)](https://github.com/foundryvtt-sinregistrar/dnd5e-spell-advancement/releases)
 
-Requiere Foundry VTT 14.367 o posterior y D&D5e 6.0.5. Instálalo desde la
+Requiere Foundry VTT 14.367 o posterior y D&D5e 6.0.6. Instálalo desde la
 URL de manifiesto publicada en la release y actívalo en el mundo.
 
 Módulo local para añadir avances `ItemChoice` nativos de D&D5e a clases que

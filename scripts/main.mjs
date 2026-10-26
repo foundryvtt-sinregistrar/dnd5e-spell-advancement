@@ -616,7 +616,7 @@ function importedSpellChoiceDeficits(classItem, advancements) {
 }
 
 /**
- * D&D5e 6.0.5 revierte todos los Advancements ya aplicados al añadir uno nuevo
+ * D&D5e 6.0.6 revierte todos los Advancements ya aplicados al añadir uno nuevo
  * con `AdvancementManager.forNewAdvancement`. Un ItemGrant importado sin
  * `value.added` no tiene nada que revertir: su `reverse` devuelve undefined,
  * pero el gestor intenta restaurarlo inmediatamente y D&D5e accede a
@@ -643,7 +643,7 @@ function removeEmptyItemGrantRestoreSteps(manager) {
 }
 
 /**
- * D&D5e 6.0.5 no expone una exclusión de UUIDs en ItemChoice. El Browser sí
+ * D&D5e 6.0.6 no expone una exclusión de UUIDs en ItemChoice. El Browser sí
  * admite filtros arbitrarios y usa el mismo patrón para excluir clases ya
  * presentes. Se conserva el Browser nativo; sólo se añade `NOT uuid IN` para
  * los conjuros embebidos que el Actor ya posee.

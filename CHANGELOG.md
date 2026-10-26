@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.14.5 - 2026-10-26
+
+- Validates the native advancement integration against D&D5e 6.0.6.
+- Updates declared and documented D&D5e compatibility to 6.0.6.
+
 ## 1.14.4 - 2026-10-23
 
 - Adds an English README and public technical documentation links.

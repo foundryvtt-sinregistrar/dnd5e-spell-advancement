@@ -8,14 +8,14 @@
 
 ![Foundry v14](https://img.shields.io/badge/Foundry-v14-green)
 ![Foundry verified 14.368](https://img.shields.io/badge/Verified-14.368-blue)
-![System dnd5e 6.0.5](https://img.shields.io/badge/dnd5e-6.0.5-blue)
+![System dnd5e 6.0.6](https://img.shields.io/badge/dnd5e-6.0.6-blue)
 
 [![Latest Release](https://img.shields.io/github/v/release/foundryvtt-sinregistrar/dnd5e-spell-advancement?label=release)](https://github.com/foundryvtt-sinregistrar/dnd5e-spell-advancement/releases/latest)
 [![Downloads Latest Release](https://img.shields.io/github/downloads/foundryvtt-sinregistrar/dnd5e-spell-advancement/latest/total?label=latest%20release%20downloads)](https://github.com/foundryvtt-sinregistrar/dnd5e-spell-advancement/releases/latest)
 
 [![Downloads Total](https://img.shields.io/github/downloads/foundryvtt-sinregistrar/dnd5e-spell-advancement/total?label=total%20downloads)](https://github.com/foundryvtt-sinregistrar/dnd5e-spell-advancement/releases)
 
-Requires Foundry VTT 14.367 or later and D&D5e 6.0.5. Install it from the
+Requires Foundry VTT 14.367 or later and D&D5e 6.0.6. Install it from the
 manifest URL published in the release, then enable it in your world.
 
 This module adds native D&D5e `ItemChoice` Advancements to classes that need to
