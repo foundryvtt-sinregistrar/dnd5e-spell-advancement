@@ -2,7 +2,7 @@
   "id": "dnd5e-spell-advancement",
   "title": "D&D5e — Spell Advancement",
   "description": "Native D&D5e spell-selection Advancements for supported class and subclass progression.",
-  "version": "1.14.5",
+  "version": "1.14.6",
   "authors": [
     {
       "name": "foundryvtt-sinregistrar"
@@ -10,7 +10,7 @@
   ],
   "compatibility": {
     "minimum": "14.367",
-    "verified": "14.368"
+    "verified": "14.369"
   },
   "relationships": {
     "systems": [

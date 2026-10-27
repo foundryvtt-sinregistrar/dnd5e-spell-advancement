@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.14.6 - 2026-10-27
+
+- Verified compatibility with Foundry VTT 14.369 and D&D5e 6.0.6, including the spell advancement workflow.
+
 ## 1.14.5 - 2026-10-26
 
 - Validates the native advancement integration against D&D5e 6.0.6.
