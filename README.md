@@ -1,5 +1,7 @@
 # D&D5e Spell Advancement
 
+**Español** | [English](README.en.md)
+
 <p align="center">
   <img src="docs/foundry/assets/banner-spell-advancement.png" alt="D&amp;D5e Spell Advancement">
 </p>
@@ -7,7 +9,7 @@
 **Versión actual — Foundry v14**
 
 ![Foundry v14](https://img.shields.io/badge/Foundry-v14-green)
-![Foundry verified 14.368](https://img.shields.io/badge/Verified-14.368-blue)
+![Foundry verified 14.369](https://img.shields.io/badge/Verified-14.369-blue)
 ![System dnd5e 6.0.6](https://img.shields.io/badge/dnd5e-6.0.6-blue)
 
 [![Latest Release](https://img.shields.io/github/v/release/foundryvtt-sinregistrar/dnd5e-spell-advancement?label=release)](https://github.com/foundryvtt-sinregistrar/dnd5e-spell-advancement/releases/latest)
@@ -25,9 +27,20 @@ compendio oficial.
 Para detalles de implementación, compatibilidad y API, consulta la
 [documentación técnica](docs/DOCUMENTACION-TECNICA.md).
 
----
+## Estado
 
-## ✨ Mejoras en la creación y subida de nivel de personajes mágicos
+Compatible con Foundry VTT 14.367 o posterior y dnd5e 6.0.6. La versión publicada se distribuye como módulo independiente y no modifica compendios oficiales.
+
+## Requisitos
+
+- Foundry VTT 14.367 o posterior.
+- El sistema dnd5e 6.0.6.
+
+## Instalación
+
+Instala desde el navegador de complementos de Foundry usando el manifiesto de la [última versión](https://github.com/foundryvtt-sinregistrar/dnd5e-spell-advancement/releases/latest/download/module.json), y actívalo en el mundo.
+
+## Activación y uso
 
 **D&D5e Spell Advancement** amplía el sistema de progresión de personajes de Dungeons & Dragons 5e en Foundry VTT, incorporando la **selección de trucos y conjuros directamente al proceso de creación del personaje y subida de nivel**.
 
@@ -110,7 +123,7 @@ Su objetivo es **hacer que aprender y seleccionar conjuros forme parte natural d
 
 ---
 
-## Demostración visual: selección de conjuros al subir de nivel
+## Ejemplos de uso
 Estas capturas proceden de una partida real de Foundry VTT. Muestran la subida de nivel de un **Clérigo 1 → 2**, de un **Mago 5 → 6** y el procesamiento de un actor importado.
 
 El módulo añade avances de elección de conjuros al flujo nativo de D&D5e: el jugador selecciona desde el Navegador de Compendios, los conjuros elegidos se registran en el avance y los personajes importados pueden reconciliar sus elecciones históricas.
@@ -215,7 +228,7 @@ El avance del Mago muestra la selección de dos conjuros para el libro, el filtr
 
 **Características visibles en las demostraciones:** integración con el gestor de avances de D&D5e, navegador de compendios con filtros, registro de las elecciones y reconciliación de conjuros importados.
 
-## Alcance actual
+## Contenido incluido
 
 Clérigo (PHB 2024):
 
@@ -265,7 +278,7 @@ Subclases del PHB instaladas:
 - **Tramposo arcano**: la misma progresión, más `Mano de mago` concedida de
   forma fija en nivel 3; sus dos primeros trucos siguen siendo elecciones.
 
-## Actores existentes
+## Actualización: actores existentes
 
 El módulo no modifica automáticamente actores ya existentes. Para iniciar la
 configuración de un Clérigo existente, ejecuta como propietario del Actor:
@@ -292,7 +305,7 @@ Identificadores disponibles: `druid`, `sorcerer`, `warlock`, `ranger`,
 
 Las subclases se detectan por su UUID de origen oficial al añadirse al Actor.
 
-## Actores importados
+## Actualización: actores importados
 
 Al configurar un Actor importado, el módulo registra los conjuros de su clase
 ya existentes como elecciones históricas. El Compendium Browser nativo excluye

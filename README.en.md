@@ -1,5 +1,7 @@
 # D&D5e Spell Advancement
 
+[Español](README.md) | **English**
+
 <p align="center">
   <img src="docs/foundry/assets/banner-spell-advancement.png" alt="D&amp;D5e Spell Advancement">
 </p>
@@ -7,7 +9,7 @@
 **Current version — Foundry v14**
 
 ![Foundry v14](https://img.shields.io/badge/Foundry-v14-green)
-![Foundry verified 14.368](https://img.shields.io/badge/Verified-14.368-blue)
+![Foundry verified 14.369](https://img.shields.io/badge/Verified-14.369-blue)
 ![System dnd5e 6.0.6](https://img.shields.io/badge/dnd5e-6.0.6-blue)
 
 [![Latest Release](https://img.shields.io/github/v/release/foundryvtt-sinregistrar/dnd5e-spell-advancement?label=release)](https://github.com/foundryvtt-sinregistrar/dnd5e-spell-advancement/releases/latest)
@@ -25,7 +27,20 @@ compendium.
 For implementation, compatibility, and API details, see the
 [technical documentation (Spanish)](docs/DOCUMENTACION-TECNICA.md).
 
-## Current scope
+## Status
+
+Compatible with Foundry VTT 14.367 or newer and dnd5e 6.0.6. The published module does not modify official compendiums.
+
+## Requirements
+
+- Foundry VTT 14.367 or newer.
+- The dnd5e system 6.0.6.
+
+## Installation
+
+Install from Foundry's Add-on Modules browser with the [latest-release manifest](https://github.com/foundryvtt-sinregistrar/dnd5e-spell-advancement/releases/latest/download/module.json), then enable it in the world.
+
+## Activation and use
 
 Cleric (PHB 2024):
 
@@ -76,7 +91,7 @@ Installed PHB subclasses:
 - **Arcane Trickster**: the same progression, plus `Mage Hand` granted
   automatically at level 3; its first two cantrips remain choices.
 
-## Existing Actors
+## Updating: existing Actors
 
 The module does not automatically modify existing Actors. To start configuring
 an existing Cleric, run the following as the Actor owner:
@@ -104,7 +119,7 @@ Available identifiers: `druid`, `sorcerer`, `warlock`, `ranger`, `paladin`, and
 Subclasses are detected by their official source UUID when they are added to an
 Actor.
 
-## Imported Actors
+## Updating: imported Actors
 
 When configuring an imported Actor, the module records its existing class
 spells as historical choices. The native Compendium Browser excludes spells the

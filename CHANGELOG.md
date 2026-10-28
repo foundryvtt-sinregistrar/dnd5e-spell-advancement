@@ -1,21 +1,31 @@
 # Changelog
 
-## 1.14.6 - 2026-10-27
+## [Unreleased]
+
+## [1.14.6] - 2026-10-27
+
+### Changed
 
 - Verified compatibility with Foundry VTT 14.369 and D&D5e 6.0.6, including the spell advancement workflow.
 
-## 1.14.5 - 2026-10-26
+## [1.14.5] - 2026-10-26
+
+### Changed
 
 - Validates the native advancement integration against D&D5e 6.0.6.
 - Updates declared and documented D&D5e compatibility to 6.0.6.
 
-## 1.14.4 - 2026-10-23
+## [1.14.4] - 2026-10-23
+
+### Changed
 
 - Adds an English README and public technical documentation links.
 - Aligns the documentation and release workflow for publication in the Foundry
   VTT package directory.
 
-## 1.14.3 - 2026-10-22
+## [1.14.3] - 2026-10-22
+
+### Added
 
 - Al iniciar la cola, guarda automáticamente los `ItemChoice` completamente
   cubiertos por conjuros importados como historial de avance. Las subidas de
@@ -41,12 +51,16 @@
 - Adds a native sequential batch for configuring supported existing Actors without automatically adding spells.
 - Adds a restricted World Settings menu for reviewing and controlling that batch without a macro.
 
-## 1.14.0 - 2026-10-13
+## [1.14.0] - 2026-10-13
+
+### Changed
 
 - Imported characters retain existing class spell choices and the native Compendium Browser excludes spells already on the Actor.
 - The Compendium Browser keeps the Advancement's spell-level range enforced while allowing users to narrow the visible range.
 
-## 0.4.0 - 2026-10-06
+## [0.4.0] - 2026-10-06
+
+### Added
 
 - First public release of native D&D5e spell-selection Advancements.
 - Supports Cleric, Bard, Druid, Sorcerer, Warlock, Ranger, Paladin, and Wizard.
