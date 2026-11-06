@@ -6,11 +6,10 @@
   <img src="docs/foundry/assets/banner-spell-advancement.png" alt="D&amp;D5e Spell Advancement">
 </p>
 
-**Current version — Foundry v14**
-
-![Foundry v14](https://img.shields.io/badge/Foundry-v14-green)
-![Foundry verified 14.369](https://img.shields.io/badge/Verified-14.369-blue)
-![System dnd5e 6.0.6](https://img.shields.io/badge/dnd5e-6.0.6-blue)
+![Foundry minimum](https://img.shields.io/badge/Foundry_min-14.367%2B-green)
+![Foundry verified](https://img.shields.io/badge/Foundry_verified-14.369-blue)
+![dnd5e minimum](https://img.shields.io/badge/dnd5e_min-6.0.5%2B-blue)
+![dnd5e verified](https://img.shields.io/badge/dnd5e_verified-6.0.6-blue)
 
 [![Latest Release](https://img.shields.io/github/v/release/foundryvtt-sinregistrar/dnd5e-spell-advancement?label=release)](https://github.com/foundryvtt-sinregistrar/dnd5e-spell-advancement/releases/latest)
 [![Downloads Latest Release](https://img.shields.io/github/downloads/foundryvtt-sinregistrar/dnd5e-spell-advancement/latest/total?label=latest%20release%20downloads)](https://github.com/foundryvtt-sinregistrar/dnd5e-spell-advancement/releases/latest)
