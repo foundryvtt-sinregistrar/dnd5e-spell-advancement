@@ -7,7 +7,7 @@
 </p>
 
 ![Foundry minimum](https://img.shields.io/badge/Foundry_min-14.367%2B-green)
-![Foundry verified](https://img.shields.io/badge/Foundry_verified-14.369-blue)
+![Foundry verified](https://img.shields.io/badge/Foundry_verified-14.370-blue)
 ![dnd5e minimum](https://img.shields.io/badge/dnd5e_min-6.0.5%2B-blue)
 ![dnd5e verified](https://img.shields.io/badge/dnd5e_verified-6.0.6-blue)
 
