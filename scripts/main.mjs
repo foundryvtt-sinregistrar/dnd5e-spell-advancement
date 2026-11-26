@@ -754,7 +754,7 @@ function subclassAdvancements(item) {
   const nativeCantrips = nativeAdvancements.some(advancement => advancement.type === "ItemChoice"
     && advancement.configuration?.type === "spell"
     && advancement.configuration.restriction?.level === "0"
-    && advancement.configuration.restriction.list?.includes("class:wizard"));
+    && Array.from(advancement.configuration.restriction.list ?? []).includes("class:wizard"));
   const mageHandUuid = "Compendium.dnd5e.spells24.Item.phbsplMageHand00";
   const nativeMageHand = nativeAdvancements.some(advancement => advancement.type === "ItemGrant"
     && advancement.configuration?.items?.some(grant => grant.uuid?.endsWith(".Item.phbsplMageHand00")));

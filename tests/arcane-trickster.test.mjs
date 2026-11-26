@@ -49,7 +49,7 @@ test("only adds prepared spells when the actor's native feature already grants c
     configuration: { items: [{ uuid: "Compendium.dnd-players-handbook.spells.Item.phbsplMageHand00" }] }
   }, {
     type: "ItemChoice",
-    configuration: { type: "spell", restriction: { level: "0", list: ["class:wizard"] } }
+    configuration: { type: "spell", restriction: { level: "0", list: new Set(["class:wizard"]) } }
   }];
   const savedAdvancements = new Map([["dsaATCantrips001", { value: { added: { 3: { spell: "original" } } } }]]);
   assert.deepEqual(reviewArcaneTrickster(native), ["dsaATSpells00001"]);
