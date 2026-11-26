@@ -31,7 +31,5 @@
   "readme": "https://github.com/foundryvtt-sinregistrar/dnd5e-spell-advancement/blob/main/README.md",
   "changelog": "https://github.com/foundryvtt-sinregistrar/dnd5e-spell-advancement/blob/main/CHANGELOG.md",
   "license": "https://github.com/foundryvtt-sinregistrar/dnd5e-spell-advancement/blob/main/LICENSE",
-  "esmodules": [
-    "scripts/main.mjs"
-  ]
+  "esmodules": ["scripts/main.mjs"]
 }
