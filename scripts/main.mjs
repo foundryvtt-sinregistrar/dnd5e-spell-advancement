@@ -93,7 +93,8 @@ const SUBCLASS_SPELLCASTERS = {
     label: "Tramposo arcano",
     cantripId: "dsaATCantrips001",
     spellsId: "dsaATSpells00001",
-    mageHandId: "dsaATMageHand001"
+    mageHandId: "dsaATMageHand001",
+    spellcastingUuid: "Compendium.dnd-players-handbook.classes.Item.phbrgeSpellcasti"
   }
 };
 
@@ -744,8 +745,23 @@ function subclassAdvancements(item) {
   const profile = SUBCLASS_SPELLCASTERS[sourceId(item)];
   if (!profile || item?.type !== "subclass") return null;
 
-  const advancements = [
-    spellChoice({
+  // PHB 3.0.0 moved the Arcane Trickster cantrips and Mage Hand to its Spellcasting feature.
+  // Check the actor's copy so earlier imports retain their original choices.
+  const spellcasting = profile.spellcastingUuid
+    ? item.actor?.itemTypes?.feat?.find(feature => sourceId(feature) === profile.spellcastingUuid)
+    : null;
+  const nativeAdvancements = Array.from(spellcasting?.system?.advancement?.values() ?? []);
+  const nativeCantrips = nativeAdvancements.some(advancement => advancement.type === "ItemChoice"
+    && advancement.configuration?.type === "spell"
+    && advancement.configuration.restriction?.level === "0"
+    && advancement.configuration.restriction.list?.includes("class:wizard"));
+  const mageHandUuid = "Compendium.dnd5e.spells24.Item.phbsplMageHand00";
+  const nativeMageHand = nativeAdvancements.some(advancement => advancement.type === "ItemGrant"
+    && advancement.configuration?.items?.some(grant => grant.uuid?.endsWith(".Item.phbsplMageHand00")));
+
+  const advancements = [];
+  if (!nativeCantrips) {
+    advancements.push(spellChoice({
       id: profile.cantripId,
       name: `${profile.label}: trucos`,
       choices: { 3: { count: 2 }, 10: { count: 1 } },
@@ -753,26 +769,26 @@ function subclassAdvancements(item) {
       ability: "int",
       level: "0",
       prepared: 2
-    }),
-    spellChoice({
-      id: profile.spellsId,
-      name: `${profile.label}: conjuros preparados`,
-      choices: THIRD_CASTER_PREPARED_CHOICES,
-      list: "class:wizard",
-      ability: "int",
-      level: "availableNoCantrips",
-      prepared: 1
-    })
-  ];
+    }));
+  }
+  advancements.push(spellChoice({
+    id: profile.spellsId,
+    name: `${profile.label}: conjuros preparados`,
+    choices: THIRD_CASTER_PREPARED_CHOICES,
+    list: "class:wizard",
+    ability: "int",
+    level: "availableNoCantrips",
+    prepared: 1
+  }));
 
-  if (profile.mageHandId) {
+  if (profile.mageHandId && !nativeMageHand) {
     advancements.unshift({
       _id: profile.mageHandId,
       type: "ItemGrant",
       name: "Tramposo arcano: Mano de mago",
       level: 3,
       configuration: {
-        items: [{ uuid: "Compendium.dnd5e.spells24.Item.phbsplMageHand00", optional: false }],
+        items: [{ uuid: mageHandUuid, optional: false }],
         optional: false,
         spell: {
           ability: ["int"],

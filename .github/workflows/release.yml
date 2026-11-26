@@ -30,6 +30,8 @@ jobs:
           python-version: "3.11"
       - name: Validate manifest and module entry point
         run: npm run validate
+      - name: Test advancement behavior
+        run: node --test
       - name: Verify tag matches manifest version
         env:
           RELEASE_TAG: ${{ github.ref_name }}
