@@ -4,7 +4,7 @@
 
 ### Changed
 
-- Verified compatibility with Foundry VTT 14.370 and D&D5e 6.0.6.
+- Verified compatibility with Foundry VTT 14.370 and D&D5e 6.1.1, including native spell selection and Actor persistence after reloading with Player's Handbook 3.0.0.
 
 ## [1.14.6] - 2026-10-27
 

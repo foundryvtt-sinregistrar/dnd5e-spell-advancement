@@ -4,6 +4,13 @@ Fecha inicial: 2026-10-06
 Actualización documental: 2026-10-26 (versión 1.14.5 pendiente de publicación)
 Entorno validado: Foundry VTT 14.368 y D&D5e 6.0.6.
 
+Validación posterior (2026-11-27): Foundry VTT 14.370, D&D5e 6.1.1 y módulo
+1.14.6. La selección nativa y su persistencia tras recargar están confirmadas
+para Tramposo Arcano de PHB 3.0.0. Véase la
+[evidencia de compatibilidad 6.1.1](docs/DND5E-6.1.1-VALIDATION.md).
+Las limitaciones y referencias a versiones anteriores que siguen describen
+la investigación histórica.
+
 ## Resultado
 
 `dnd5e-spell-advancement` añade Advancements `ItemChoice` propios a los
