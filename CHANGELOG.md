@@ -2,9 +2,15 @@
 
 ## [Unreleased]
 
+## [1.14.7] - 2026-11-27
+
 ### Changed
 
 - Verified compatibility with Foundry VTT 14.370 and D&D5e 6.1.1, including native spell selection and Actor persistence after reloading with Player's Handbook 3.0.0.
+
+### Fixed
+
+- Exclude development-only files from release packages.
 
 ## [1.14.6] - 2026-10-27
 
